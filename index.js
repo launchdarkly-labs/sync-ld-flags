@@ -4,7 +4,7 @@
 var jsonpatch = require('fast-json-patch'),
   request = require('request'),
   baseUrl = 'https://app.launchdarkly.com/api',
-  sourceEnvironment = process.argv[2];
+  sourceEnvironment = process.argv[2],
   destinationEnvironment = process.argv[3];
 
 if (!sourceEnvironment) {
