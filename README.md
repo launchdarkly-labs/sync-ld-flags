@@ -1,6 +1,9 @@
 LaunchDarkly Environment Synchronizer
 =====================================
 
+** Note **
+This script is for customers on v1 of LaunchDarkly only. We will be providing an updated script for customers on v2 soon.
+
 This Node script simplifies the task of synchronizing flag rollout rules between two different environments. It assumes that both environments are in the same project and account, and takes as input the API keys for the two environments you're syncing.
 
 The following properties will be synchronized:
