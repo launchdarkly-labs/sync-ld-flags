@@ -55,6 +55,7 @@ describe('copyValues', function() {
 // * LD_SRCENVKEY
 // * LD_DESTENVKEY
 describe('live test', function () {
+  this.timeout(5000);
   var flags = {};
   before(function(done) {
     if (!process.env.LD_APITOKEN ||
@@ -71,9 +72,8 @@ describe('live test', function () {
         if (err) return done(err);
         flags = fetchedFlags;
 
-        Object.keys(flags).forEach(function(key) {
-          var flag = flags[key];
-          describe('for the `' + key + '` flag', function () {
+        flags.forEach(function(flag) {
+          describe('for the `' + flag.key + '` flag', function () {
             it('the `on` value should be copied', function() {
                 assert.deepEqual(flag.environments[process.env.LD_SRCENVKEY].on, flag.environments[process.env.LD_DESTENVKEY].on);
             });
