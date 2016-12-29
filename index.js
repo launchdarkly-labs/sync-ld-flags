@@ -16,7 +16,7 @@ function patchFlag (patch, key, cb) {
     url: baseUrl + '/flags/' + projectKey + '/' + key,
     body: patch,
     headers: {
-      'Authorization': 'api_key ' + apiToken,
+      'Authorization': apiToken,
       'Content-Type': 'application/json'
     }
   };
@@ -28,7 +28,7 @@ var fetchFlags = function (cb) {
   var options = {
     url: baseUrl + '/flags/' + projectKey,
     headers: {
-      'Authorization': 'api_key ' + apiToken,
+      'Authorization': apiToken,
       'Content-Type': 'application/json'
     }
   };
