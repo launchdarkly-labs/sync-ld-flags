@@ -2,32 +2,8 @@
 'use strict';
 
 var jsonpatch = require('fast-json-patch'),
-  request = require('request'),
-  baseUrl = 'https://app.launchdarkly.com/api/v2',
-  projectKey = process.argv[2],
-  sourceEnvironment = process.argv[3],
-  destinationEnvironment = process.argv[4],
-  apiToken = process.argv[5];
+  request = require('request');
 
-if (!projectKey) {
-  throw new Error('Missing project key for sync');
-}
-
-if (!sourceEnvironment) {
-  throw new Error('Missing source environment for sync');
-}
-
-if (!destinationEnvironment) {
-  throw new Error('Missing destination environment for sync');
-}
-
-if (sourceEnvironment === destinationEnvironment) {
-  throw new Error('Why are you syncing the same environment?!');
-}
-
-if (!apiToken) {
-  throw new Error('Missing api token for sync');
-}
 
 
 function patchFlag (patch, key, cb) {
@@ -64,18 +40,7 @@ function fetchFlags (cb) {
   request(options, callback);
 }
 
-function props (flag) {
-  return {
-    'on': flag.on,
-    'archived': flag.archived,
-    'targets': flag.targets,
-    'rules': flag.rules,
-    'prerequisites': flag.prerequisites,
-    'fallthrough': flag.fallthrough
-  };
-}
-
-function copyValues(flag) {
+var copyValues = function (flag, destinationEnvironment, sourceEnvironment) {
   var attributes = [
     'on',
     'archived',
@@ -107,7 +72,7 @@ function syncEnvironment (fromKey, toKey) {
         throw new Error('Missing destination environment flag. Did you specify the right project?');
       }
       console.log('Syncing ' + flag.key)
-      copyValues(flag)
+      copyValues(flag, destinationEnvironment, sourceEnvironment)
 
       var diff = jsonpatch.generate(observer);
 
@@ -126,4 +91,32 @@ function syncEnvironment (fromKey, toKey) {
   });
 }
 
-syncEnvironment(sourceEnvironment, destinationEnvironment);
+if (require.main === module) {
+  var baseUrl = 'https://app.launchdarkly.com/api/v2',
+      projectKey = process.argv[2],
+      sourceEnvironment = process.argv[3],
+      destinationEnvironment = process.argv[4],
+      apiToken = process.argv[5];
+
+  if (!projectKey) {
+    throw new Error('Missing project key for sync');
+  }
+
+  if (!sourceEnvironment) {
+    throw new Error('Missing source environment for sync');
+  }
+
+  if (!destinationEnvironment) {
+    throw new Error('Missing destination environment for sync');
+  }
+
+  if (sourceEnvironment === destinationEnvironment) {
+    throw new Error('Why are you syncing the same environment?!');
+  }
+
+  if (!apiToken) {
+    throw new Error('Missing api token for sync');
+  }
+  
+  syncEnvironment(sourceEnvironment, destinationEnvironment);
+}
