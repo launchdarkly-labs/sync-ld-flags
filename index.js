@@ -2,7 +2,12 @@
 'use strict';
 
 var jsonpatch = require('fast-json-patch'),
-  request = require('request');
+  request = require('request'),
+  baseUrl = 'https://app.launchdarkly.com/api/v2',
+  projectKey = '',
+  sourceEnvironment = '',
+  destinationEnvironment = '',
+  apiToken = '';
 
 
 
@@ -19,7 +24,7 @@ function patchFlag (patch, key, cb) {
   request.patch(options, cb);
 }
 
-function fetchFlags (cb) {
+var fetchFlags = function (cb) {
   var options = {
     url: baseUrl + '/flags/' + projectKey,
     headers: {
@@ -92,8 +97,7 @@ function syncEnvironment (fromKey, toKey) {
 }
 
 if (require.main === module) {
-  var baseUrl = 'https://app.launchdarkly.com/api/v2',
-      projectKey = process.argv[2],
+  var projectKey = process.argv[2],
       sourceEnvironment = process.argv[3],
       destinationEnvironment = process.argv[4],
       apiToken = process.argv[5];
