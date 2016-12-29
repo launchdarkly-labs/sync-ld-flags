@@ -3,28 +3,20 @@
 
 var jsonpatch = require('fast-json-patch'),
   request = require('request'),
-  baseUrl = 'https://app.launchdarkly.com/api',
-  sourceEnvironment = process.argv[2],
-  destinationEnvironment = process.argv[3];
+  baseUrl = 'https://app.launchdarkly.com/api/v2',
+  projectKey = '',
+  sourceEnvironment = '',
+  destinationEnvironment = '',
+  apiToken = '';
 
-if (!sourceEnvironment) {
-  throw new Error('Missing source environment for sync');
-}
 
-if (!destinationEnvironment) {
-  throw new Error('Missing destination environment for sync');
-}
 
-if (sourceEnvironment === destinationEnvironment) {
-  throw new Error('Why are you syncing the same environment?!');
-}
-
-function patchFlag (apiKey, patch, key, cb) {
+function patchFlag (patch, key, cb) {
   var options = {
-    url: baseUrl + '/features' + '/' + key,
+    url: baseUrl + '/flags/' + projectKey + '/' + key,
     body: patch,
     headers: {
-      'Authorization': 'api_key ' + apiKey,
+      'Authorization': apiToken,
       'Content-Type': 'application/json'
     }
   };
@@ -32,11 +24,11 @@ function patchFlag (apiKey, patch, key, cb) {
   request.patch(options, cb);
 }
 
-function fetchFlags (apiKey, cb) {
+var fetchFlags = function (cb) {
   var options = {
-    url: baseUrl + '/features',
+    url: baseUrl + '/flags/' + projectKey,
     headers: {
-      'Authorization': 'api_key ' + apiKey,
+      'Authorization': apiToken,
       'Content-Type': 'application/json'
     }
   };
@@ -53,51 +45,82 @@ function fetchFlags (apiKey, cb) {
   request(options, callback);
 }
 
-function props (flag) {
-  return {
-    'includeInSnippet': flag.includeInSnippet,
-    'variations': flag.variations,
-    'on': flag.on
-  };
+var copyValues = function (flag, destinationEnvironment, sourceEnvironment) {
+  var attributes = [
+    'on',
+    'archived',
+    'targets',
+    'rules',
+    'prerequisites',
+    'fallthrough'
+  ];
+  attributes.forEach(function (attr) {
+    flag.environments[destinationEnvironment][attr] = flag.environments[sourceEnvironment][attr];
+  });
 }
 
 function syncEnvironment (fromKey, toKey) {
-  fetchFlags(fromKey, function (err, fromFlags) {
+  fetchFlags(function (err, flags) {
     if (err) {
       throw new Error('Error fetching flags');
     }
 
-    fetchFlags(toKey, function (err, flags) {
-      if (err) {
-        console.error(err);
+    flags.forEach(function (flag) {
+      var fromFlag = flag.environments[sourceEnvironment],
+          toFlag =  flag.environments[destinationEnvironment],
+          observer = jsonpatch.observe(flag);
+
+      if (!fromFlag) {
+        throw new Error('Missing source environment flag. Did you specify the right project?');
       }
+      if (!toFlag) {
+        throw new Error('Missing destination environment flag. Did you specify the right project?');
+      }
+      console.log('Syncing ' + flag.key)
+      copyValues(flag, destinationEnvironment, sourceEnvironment)
 
-      var toFlags = flags.reduce(function (accum, flag) {
-        accum[flag.key] = flag;
-        return accum;
-      }, {});
+      var diff = jsonpatch.generate(observer);
 
-      fromFlags.forEach(function (fromFlag) {
-        var toFlag = toFlags[fromFlag.key];
-
-        if (!toFlag) {
-          console.log('Could not find flag ' + fromFlag.key);
-        } else {
-          var diff = jsonpatch.compare(props(toFlag), props(fromFlag));
-
-          if (diff.length > 0) {
-            patchFlag(toKey, JSON.stringify(diff), fromFlag.key, function (err) {
-              if (err) {
-                throw new Error(err);
-              }
-            });
+      if (diff.length > 0) {
+        console.log('Modifying', flag.key, 'with', diff);
+        patchFlag(JSON.stringify(diff), flag.key, function (err) {
+          if (err) {
+            throw new Error(err);
           }
-        }
-
-      });
+        });
+      } else {
+        console.log('No changes in ' + flag.key)
+      }
     });
 
   });
 }
 
-syncEnvironment(sourceEnvironment, destinationEnvironment);
+if (require.main === module) {
+  var projectKey = process.argv[2],
+      sourceEnvironment = process.argv[3],
+      destinationEnvironment = process.argv[4],
+      apiToken = process.argv[5];
+
+  if (!projectKey) {
+    throw new Error('Missing project key for sync');
+  }
+
+  if (!sourceEnvironment) {
+    throw new Error('Missing source environment for sync');
+  }
+
+  if (!destinationEnvironment) {
+    throw new Error('Missing destination environment for sync');
+  }
+
+  if (sourceEnvironment === destinationEnvironment) {
+    throw new Error('Why are you syncing the same environment?!');
+  }
+
+  if (!apiToken) {
+    throw new Error('Missing api token for sync');
+  }
+  
+  syncEnvironment(sourceEnvironment, destinationEnvironment);
+}
