@@ -25,3 +25,8 @@ Quick setup
 
         node index.js PROJECT_KEY SOURCE_ENVIRONMENT_KEY DEST_ENVIRONMENT_KEY API_TOKEN
 
+Note
+----
+
+This script works with the current (v2) verison of the LaunchDarkly API. If your account is still on the v1 version, 
+you should use the [v1 version](https://github.com/launchdarkly/sync-ld-flags/tree/v1) of this script. 
