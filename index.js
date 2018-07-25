@@ -59,6 +59,16 @@ var copyValues = function (flag, destinationEnvironment, sourceEnvironment) {
   });
 }
 
+var stripRuleIds = function(flag) {
+  for (let env in flag.environments) {
+    if(!flag.environments.hasOwnProperty(env)) continue;
+
+    for (let rule of flag.environments[env].rules) {
+      delete rule._id;
+    }
+  }
+}
+
 function syncEnvironment (fromKey, toKey) {
   fetchFlags(function (err, flags) {
     if (err) {
@@ -66,6 +76,8 @@ function syncEnvironment (fromKey, toKey) {
     }
 
     flags.forEach(function (flag) {
+      // Remove rule ids because _id is read-only and cannot be written except when reordering rules
+      stripRuleIds(flag);
       var fromFlag = flag.environments[sourceEnvironment],
           toFlag =  flag.environments[destinationEnvironment],
           observer = jsonpatch.observe(flag);
@@ -77,7 +89,7 @@ function syncEnvironment (fromKey, toKey) {
         throw new Error('Missing destination environment flag. Did you specify the right project?');
       }
       console.log('Syncing ' + flag.key)
-      copyValues(flag, destinationEnvironment, sourceEnvironment)
+      copyValues(flag, destinationEnvironment, sourceEnvironment);
 
       var diff = jsonpatch.generate(observer);
 
