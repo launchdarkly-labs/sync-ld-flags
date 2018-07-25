@@ -76,6 +76,7 @@ function syncEnvironment (fromKey, toKey) {
     }
 
     flags.forEach(function (flag) {
+      // Remove rule ids because _id is read-only and cannot be written except when reordering rules
       stripRuleIds(flag);
       var fromFlag = flag.environments[sourceEnvironment],
           toFlag =  flag.environments[destinationEnvironment],
