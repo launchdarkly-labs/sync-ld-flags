@@ -25,6 +25,10 @@ Quick setup
 
         node index.js PROJECT_KEY SOURCE_ENVIRONMENT_KEY DEST_ENVIRONMENT_KEY API_TOKEN
 
+   Optionally pass a host override as a fourth argument:
+
+        node index.js PROJECT_KEY SOURCE_ENVIRONMENT_KEY DEST_ENVIRONMENT_KEY API_TOKEN https://your-launch-darkly-deploy.com
+
 Note
 ----
 

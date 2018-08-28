@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 'use strict';
 
+const DEFAULT_HOST = 'https://app.launchdarkly.com';
+
 var jsonpatch = require('fast-json-patch'),
   request = require('request'),
-  baseUrl = 'https://app.launchdarkly.com/api/v2',
   projectKey = '',
   sourceEnvironment = '',
   destinationEnvironment = '',
@@ -112,7 +113,9 @@ if (require.main === module) {
   var projectKey = process.argv[2],
       sourceEnvironment = process.argv[3],
       destinationEnvironment = process.argv[4],
-      apiToken = process.argv[5];
+      apiToken = process.argv[5],
+      hostUrl = process.argv[6] || DEFAULT_HOST,
+      baseUrl = hostUrl + '/api/v2';
 
   if (!projectKey) {
     throw new Error('Missing project key for sync');
