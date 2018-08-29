@@ -23,11 +23,11 @@ Quick setup
 
 1. Run the script, passing in the project key, source and destination environments, and API token:
 
-        node index.js PROJECT_KEY SOURCE_ENVIRONMENT_KEY DEST_ENVIRONMENT_KEY API_TOKEN
+        node index.js --project-key PROJECT_KEY --source-env SOURCE_ENVIRONMENT_KEY --destination-env DEST_ENVIRONMENT_KEY --api-token API_TOKEN
 
-   Optionally pass a host override as a fourth argument:
+   Optionally pass a host override:
 
-        node index.js PROJECT_KEY SOURCE_ENVIRONMENT_KEY DEST_ENVIRONMENT_KEY API_TOKEN https://your-launch-darkly-deploy.com
+        node index.js -p PROJECT_KEY -s SOURCE_ENVIRONMENT_KEY -d DEST_ENVIRONMENT_KEY -t API_TOKEN -H https://your-launch-darkly-deploy.com
 
 Note
 ----

@@ -5,6 +5,7 @@ const DEFAULT_HOST = 'https://app.launchdarkly.com';
 
 var jsonpatch = require('fast-json-patch'),
   request = require('request'),
+  program = require('commander'),
   projectKey = '',
   sourceEnvironment = '',
   destinationEnvironment = '',
@@ -109,32 +110,50 @@ function syncEnvironment (fromKey, toKey) {
   });
 }
 
+program
+  .option('-p, --project-key <key>', 'Project key')
+  .option('-s, --source-env <key>', 'Source environment')
+  .option('-d, --destination-env <key>', 'Destination envrionment')
+  .option('-t, --api-token <token>', 'Api token')
+  .option('-H, --host <host>', 'Hostname override')
+  .parse(process.argv);
+
 if (require.main === module) {
-  var projectKey = process.argv[2],
-      sourceEnvironment = process.argv[3],
-      destinationEnvironment = process.argv[4],
-      apiToken = process.argv[5],
-      hostUrl = process.argv[6] || DEFAULT_HOST,
+  var projectKey = program.projectKey,
+      sourceEnvironment = program.sourceEnv,
+      destinationEnvironment = program.destinationEnv,
+      apiToken = program.apiToken,
+      hostUrl = program.host || DEFAULT_HOST,
       baseUrl = hostUrl + '/api/v2';
 
   if (!projectKey) {
-    throw new Error('Missing project key for sync');
+    console.error('Invalid usage: Please provide a value for --project-key');
+    program.outputHelp();
+    process.exit(1);
   }
 
   if (!sourceEnvironment) {
-    throw new Error('Missing source environment for sync');
+    console.error('Invalid usage: Please provide a value for --source-env');
+    program.outputHelp();
+    process.exit(1);
   }
 
   if (!destinationEnvironment) {
-    throw new Error('Missing destination environment for sync');
+    console.error('Invalid usage: Please provide a value for --destination-env');
+    program.outputHelp();
+    process.exit(1);
   }
 
   if (sourceEnvironment === destinationEnvironment) {
-    throw new Error('Why are you syncing the same environment?!');
+    console.error('Invalid usage: Why are you syncing the same environment?!');
+    program.outputHelp();
+    process.exit(1);
   }
 
   if (!apiToken) {
-    throw new Error('Missing api token for sync');
+    console.error('Invalid usage: Please provide a value for --api-token');
+    program.outputHelp();
+    process.exit(1);
   }
   
   syncEnvironment(sourceEnvironment, destinationEnvironment);
