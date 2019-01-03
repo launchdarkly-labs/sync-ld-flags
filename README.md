@@ -1,3 +1,5 @@
+This script is now depreciated; please use the in-application Compare and Copy functionality instead: https://launchdarkly.com/blog/launched-compare-and-copy-flag-settings-across-environments/
+
 LaunchDarkly Environment Synchronizer
 =====================================
 
