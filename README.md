@@ -20,17 +20,20 @@ The following properties will be synchronized:
 Quick setup
 -----------
 
-0. Install with `npm`
+1. Install with `npm`
 
         npm install --save
 
-1. Run the script, passing in the project key, source and destination environments, and API token:
+2. Run the script, passing in the project key, source and destination environments, and API token:
 
         node index.js --project-key PROJECT_KEY --source-env SOURCE_ENVIRONMENT_KEY --destination-env DEST_ENVIRONMENT_KEY --api-token API_TOKEN
 
    Optionally pass a host override:
 
         node index.js -p PROJECT_KEY -s SOURCE_ENVIRONMENT_KEY -d DEST_ENVIRONMENT_KEY -t API_TOKEN -H https://your-launch-darkly-deploy.com
+
+   Use `-D` to enable HTTP debugging if needed.
+
 
 Note
 ----
