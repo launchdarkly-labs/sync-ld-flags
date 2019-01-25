@@ -4,16 +4,15 @@
 const DEFAULT_HOST = 'https://app.launchdarkly.com';
 
 var jsonpatch = require('fast-json-patch'),
-  request = require('request'),
-  program = require('commander'),
-  projectKey = '',
-  sourceEnvironment = '',
-  destinationEnvironment = '',
-  apiToken = '';
+    request = require('request'),
+    program = require('commander'),
+    projectKey = '',
+    sourceEnvironment = '',
+    destinationEnvironment = '',
+    apiToken = '';
 
 
-
-function patchFlag (patch, key, cb) {
+function patchFlag(patch, key, cb) {
   var options = {
     url: baseUrl + '/flags/' + projectKey + '/' + key,
     body: patch,
@@ -35,11 +34,10 @@ var fetchFlags = function (cb) {
     }
   };
 
-  function callback (error, response, body) {
+  function callback(error, response, body) {
     if (!error && response.statusCode === 200) {
       cb(null, JSON.parse(body).items);
-    }
-    else {
+    } else {
       cb(error);
     }
   }
@@ -61,9 +59,9 @@ var copyValues = function (flag, destinationEnvironment, sourceEnvironment) {
   });
 }
 
-var stripRuleIds = function(flag) {
+var stripRuleIds = function (flag) {
   for (let env in flag.environments) {
-    if(!flag.environments.hasOwnProperty(env)) continue;
+    if (!flag.environments.hasOwnProperty(env)) continue;
 
     for (let rule of flag.environments[env].rules) {
       delete rule._id;
@@ -71,52 +69,57 @@ var stripRuleIds = function(flag) {
   }
 }
 
-function syncEnvironment (fromKey, toKey) {
+function syncFlag(flag) {
+  // Remove rule ids because _id is read-only and cannot be written except when reordering rules
+  stripRuleIds(flag);
+  var fromFlag = flag.environments[sourceEnvironment],
+      toFlag = flag.environments[destinationEnvironment],
+      observer = jsonpatch.observe(flag);
+
+  if (!fromFlag) {
+    throw new Error('Missing source environment flag. Did you specify the right project?');
+  }
+  if (!toFlag) {
+    throw new Error('Missing destination environment flag. Did you specify the right project?');
+  }
+  console.log('Syncing ' + flag.key)
+  copyValues(flag, destinationEnvironment, sourceEnvironment);
+
+  var diff = jsonpatch.generate(observer);
+
+  if (diff.length > 0) {
+    console.log('Modifying', flag.key, 'with', diff);
+
+    patchFlag(JSON.stringify(diff), flag.key, function (error, response, body) {
+      if (error) {
+        throw new Error(error);
+      }
+      if (response.statusCode >= 400) {
+        console.log('PATCH failed (' + response.statusCode + ') for flag', flag.key, '-', body)
+      }
+    });
+  } else {
+    console.log('No changes in ' + flag.key)
+  }
+}
+
+function syncEnvironment(fromKey, toKey) {
   fetchFlags(function (err, flags) {
     if (err) {
       throw new Error('Error fetching flags');
     }
-
-    flags.forEach(function (flag) {
-      // Remove rule ids because _id is read-only and cannot be written except when reordering rules
-      stripRuleIds(flag);
-      var fromFlag = flag.environments[sourceEnvironment],
-          toFlag =  flag.environments[destinationEnvironment],
-          observer = jsonpatch.observe(flag);
-
-      if (!fromFlag) {
-        throw new Error('Missing source environment flag. Did you specify the right project?');
-      }
-      if (!toFlag) {
-        throw new Error('Missing destination environment flag. Did you specify the right project?');
-      }
-      console.log('Syncing ' + flag.key)
-      copyValues(flag, destinationEnvironment, sourceEnvironment);
-
-      var diff = jsonpatch.generate(observer);
-
-      if (diff.length > 0) {
-        console.log('Modifying', flag.key, 'with', diff);
-        patchFlag(JSON.stringify(diff), flag.key, function (err) {
-          if (err) {
-            throw new Error(err);
-          }
-        });
-      } else {
-        console.log('No changes in ' + flag.key)
-      }
-    });
-
+    flags.forEach(syncFlag)
   });
 }
 
 program
-  .option('-p, --project-key <key>', 'Project key')
-  .option('-s, --source-env <key>', 'Source environment')
-  .option('-d, --destination-env <key>', 'Destination envrionment')
-  .option('-t, --api-token <token>', 'Api token')
-  .option('-H, --host <host>', 'Hostname override')
-  .parse(process.argv);
+    .option('-p, --project-key <key>', 'Project key')
+    .option('-s, --source-env <key>', 'Source environment')
+    .option('-d, --destination-env <key>', 'Destination envrionment')
+    .option('-t, --api-token <token>', 'Api token')
+    .option('-H, --host <host>', 'Hostname override')
+    .option('-D, --debug', 'Enables HTTP debugging')
+    .parse(process.argv);
 
 if (require.main === module) {
   var projectKey = program.projectKey,
@@ -125,6 +128,11 @@ if (require.main === module) {
       apiToken = program.apiToken,
       hostUrl = program.host || DEFAULT_HOST,
       baseUrl = hostUrl + '/api/v2';
+
+  if (program.debug) {
+    // see https://github.com/request/request#debugging
+    require('request').debug = true
+  }
 
   if (!projectKey) {
     console.error('Invalid usage: Please provide a value for --project-key');
@@ -155,6 +163,6 @@ if (require.main === module) {
     program.outputHelp();
     process.exit(1);
   }
-  
+
   syncEnvironment(sourceEnvironment, destinationEnvironment);
 }
