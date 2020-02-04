@@ -27,7 +27,7 @@ function patchFlag(patch, key, cb) {
 
 var fetchFlags = function (cb) {
   var options = {
-    url: baseUrl + '/flags/' + projectKey,
+    url: `${baseUrl}/flags/${projectKey}?summary=0&env=${sourceEnvironment}&env=${destinationEnvironment}`,
     headers: {
       'Authorization': apiToken,
       'Content-Type': 'application/json'
