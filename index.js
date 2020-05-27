@@ -59,19 +59,23 @@ var copyValues = function (flag, destinationEnvironment, sourceEnvironment) {
   });
 }
 
-var stripRuleIds = function (flag) {
+var stripRuleAndClauseIds = function (flag) {
   for (let env in flag.environments) {
     if (!flag.environments.hasOwnProperty(env)) continue;
 
     for (let rule of flag.environments[env].rules) {
       delete rule._id;
+
+      for (let clause of rule.clauses) {
+        delete clause._id;
+      }
     }
   }
 }
 
 function syncFlag(flag) {
-  // Remove rule ids because _id is read-only and cannot be written except when reordering rules
-  stripRuleIds(flag);
+  // Remove rule and clause ids because _id is read-only and cannot be written except when reordering rules
+  stripRuleAndClauseIds(flag);
   var fromFlag = flag.environments[sourceEnvironment],
       toFlag = flag.environments[destinationEnvironment],
       observer = jsonpatch.observe(flag);
