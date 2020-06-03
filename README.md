@@ -1,4 +1,6 @@
-> This script is now deprecated; please use the in-application Compare and Copy functionality instead:
+> This script is unsupported. 
+>
+> To sync individual flags, please use the in-application Compare and Copy functionality instead:
 > https://launchdarkly.com/blog/launched-compare-and-copy-flag-settings-across-environments/
 
 LaunchDarkly Environment Synchronizer
@@ -14,6 +16,7 @@ The following properties will be synchronized:
 * The archived bit
 * User target rules
 * Attribute targeting rules
+  * To omit segment rules, which may not be valid across environments, use the `--omit-segments` flag
 * Prerequisites
 * Fallthrough rule
 
@@ -33,10 +36,3 @@ Quick setup
         node index.js -p PROJECT_KEY -s SOURCE_ENVIRONMENT_KEY -d DEST_ENVIRONMENT_KEY -t API_TOKEN -H https://your-launch-darkly-deploy.com
 
    Use `-D` to enable HTTP debugging if needed.
-
-
-Note
-----
-
-This script works with the current (v2) verison of the LaunchDarkly API. If your account is still on the v1 version, 
-you should use the [v1 version](https://github.com/launchdarkly/sync-ld-flags/tree/v1) of this script. 
