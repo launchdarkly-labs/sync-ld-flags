@@ -16,7 +16,7 @@ The following properties will be synchronized:
 * The archived bit
 * User target rules
 * Attribute targeting rules
-  * To omit segment rules, which may not be valid across environments, use the `--omit-segments` flag
+  * To omit clauses that reference segments, which are not necessarily shared between environments, use the `--omit-segments` flag
 * Prerequisites
 * Fallthrough rule
 

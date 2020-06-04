@@ -79,18 +79,22 @@ const stripSegments = function (flag) {
     for (let i = 0; i < flag.environments[env].rules.length; i++) {
       const rule = flag.environments[env].rules[i];
 
+      // remove any clauses that reference segments
       for (let j = 0; j < rule.clauses.length; j++) {
         const clause = rule.clauses[j];
         if (clause.op === 'segmentMatch') {
           delete flag.environments[env].rules[i].clauses[j];
         }
       }
+      // filter out any empty items in the clause array (clauses we deleted above)
       flag.environments[env].rules[i].clauses = flag.environments[env].rules[i].clauses.filter(c => !!c);
 
+      // remove any rules that don't have any clauses (because we removed the only clause(s) above)
       if (!flag.environments[env].rules[i].clauses.length) {
         delete flag.environments[env].rules[i];
       }
     }
+    // filter out any empty items in the rules array (rules we deleted above)
     flag.environments[env].rules = flag.environments[env].rules.filter(r => !!r);
   }
 };
