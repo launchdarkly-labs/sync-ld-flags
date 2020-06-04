@@ -3,18 +3,15 @@
 
 const DEFAULT_HOST = 'https://app.launchdarkly.com';
 
-var jsonpatch = require('fast-json-patch'),
-    request = require('request'),
-    program = require('commander'),
-    projectKey = '',
-    sourceEnvironment = '',
-    destinationEnvironment = '',
-    apiToken = '';
+const jsonpatch = require('fast-json-patch');
+const request = require('request');
+const program = require('commander');
 
 
-function patchFlag(patch, key, cb) {
-  var options = {
-    url: baseUrl + '/flags/' + projectKey + '/' + key,
+function patchFlag(patch, key, config, cb) {
+  const { baseUrl, projectKey, apiToken } = config;
+  const requestOptions = {
+    url: `${baseUrl}/flags/${projectKey}/${key}`,
     body: patch,
     headers: {
       'Authorization': apiToken,
@@ -22,11 +19,12 @@ function patchFlag(patch, key, cb) {
     }
   };
 
-  request.patch(options, cb);
+  request.patch(requestOptions, cb);
 }
 
-var fetchFlags = function (cb) {
-  var options = {
+const fetchFlags = function (config, cb) {
+  const { baseUrl, projectKey, sourceEnvironment, destinationEnvironment, apiToken } = config;
+  const requestOptions = {
     url: `${baseUrl}/flags/${projectKey}?summary=0&env=${sourceEnvironment}&env=${destinationEnvironment}`,
     headers: {
       'Authorization': apiToken,
@@ -42,11 +40,12 @@ var fetchFlags = function (cb) {
     }
   }
 
-  request(options, callback);
-}
+  request(requestOptions, callback);
+};
 
-var copyValues = function (flag, destinationEnvironment, sourceEnvironment) {
-  var attributes = [
+const copyValues = function (flag, config) {
+  const { destinationEnvironment, sourceEnvironment } = config;
+  const attributes = [
     'on',
     'archived',
     'targets',
@@ -57,9 +56,9 @@ var copyValues = function (flag, destinationEnvironment, sourceEnvironment) {
   attributes.forEach(function (attr) {
     flag.environments[destinationEnvironment][attr] = flag.environments[sourceEnvironment][attr];
   });
-}
+};
 
-var stripRuleAndClauseIds = function (flag) {
+const stripRuleAndClauseIds = function (flag) {
   for (let env in flag.environments) {
     if (!flag.environments.hasOwnProperty(env)) continue;
 
@@ -71,14 +70,46 @@ var stripRuleAndClauseIds = function (flag) {
       }
     }
   }
-}
+};
 
-function syncFlag(flag) {
-  // Remove rule and clause ids because _id is read-only and cannot be written except when reordering rules
+const stripSegments = function (flag) {
+  for (let env in flag.environments) {
+    if (!flag.environments.hasOwnProperty(env)) continue;
+
+    for (let i = 0; i < flag.environments[env].rules.length; i++) {
+      const rule = flag.environments[env].rules[i];
+
+      // remove any clauses that reference segments
+      for (let j = 0; j < rule.clauses.length; j++) {
+        const clause = rule.clauses[j];
+        if (clause.op === 'segmentMatch') {
+          delete flag.environments[env].rules[i].clauses[j];
+        }
+      }
+      // filter out any empty items in the clause array (clauses we deleted above)
+      flag.environments[env].rules[i].clauses = flag.environments[env].rules[i].clauses.filter(c => !!c);
+
+      // remove any rules that don't have any clauses (because we removed the only clause(s) above)
+      if (!flag.environments[env].rules[i].clauses.length) {
+        delete flag.environments[env].rules[i];
+      }
+    }
+    // filter out any empty items in the rules array (rules we deleted above)
+    flag.environments[env].rules = flag.environments[env].rules.filter(r => !!r);
+  }
+};
+
+function syncFlag(flag, config = {}) {
+  const { omitSegments, sourceEnvironment, destinationEnvironment } = config;
+  // Remove rule ids because _id is read-only and cannot be written except when reordering rules
   stripRuleAndClauseIds(flag);
-  var fromFlag = flag.environments[sourceEnvironment],
-      toFlag = flag.environments[destinationEnvironment],
-      observer = jsonpatch.observe(flag);
+  if (omitSegments) {
+    // Remove segments because segments are not guaranteed to exist across environments
+    stripSegments(flag);
+  }
+  const fromFlag = flag.environments[sourceEnvironment];
+  const toFlag = flag.environments[destinationEnvironment];
+  const observer = jsonpatch.observe(flag);
 
   if (!fromFlag) {
     throw new Error('Missing source environment flag. Did you specify the right project?');
@@ -86,15 +117,15 @@ function syncFlag(flag) {
   if (!toFlag) {
     throw new Error('Missing destination environment flag. Did you specify the right project?');
   }
-  console.log('Syncing ' + flag.key)
-  copyValues(flag, destinationEnvironment, sourceEnvironment);
+  console.log('Syncing ' + flag.key);
+  copyValues(flag, config);
 
-  var diff = jsonpatch.generate(observer);
+  const diff = jsonpatch.generate(observer);
 
   if (diff.length > 0) {
     console.log('Modifying', flag.key, 'with', diff);
 
-    patchFlag(JSON.stringify(diff), flag.key, function (error, response, body) {
+    patchFlag(JSON.stringify(diff), flag.key, config, function (error, response, body) {
       if (error) {
         throw new Error(error);
       }
@@ -107,66 +138,70 @@ function syncFlag(flag) {
   }
 }
 
-function syncEnvironment(fromKey, toKey) {
-  fetchFlags(function (err, flags) {
+function syncEnvironment(config = {}) {
+  fetchFlags(config, function (err, flags) {
     if (err) {
       throw new Error('Error fetching flags');
     }
-    flags.forEach(syncFlag)
+    flags.forEach(flag => syncFlag(flag, config));
   });
 }
 
 program
     .option('-p, --project-key <key>', 'Project key')
     .option('-s, --source-env <key>', 'Source environment')
-    .option('-d, --destination-env <key>', 'Destination envrionment')
+    .option('-d, --destination-env <key>', 'Destination environment')
     .option('-t, --api-token <token>', 'Api token')
+    .option('-o, --omit-segments', 'Omit segments when syncing')
     .option('-H, --host <host>', 'Hostname override')
     .option('-D, --debug', 'Enables HTTP debugging')
     .parse(process.argv);
 
 if (require.main === module) {
-  var projectKey = program.projectKey,
-      sourceEnvironment = program.sourceEnv,
-      destinationEnvironment = program.destinationEnv,
-      apiToken = program.apiToken,
-      hostUrl = program.host || DEFAULT_HOST,
-      baseUrl = hostUrl + '/api/v2';
+  const hostUrl = program.host || DEFAULT_HOST;
+  const config = {
+    projectKey: program.projectKey || '',
+    sourceEnvironment: program.sourceEnv || '',
+    destinationEnvironment: program.destinationEnv || '',
+    apiToken: program.apiToken || '',
+    baseUrl: hostUrl + '/api/v2',
+    omitSegments: !!program.omitSegments,
+  };
 
   if (program.debug) {
     // see https://github.com/request/request#debugging
     require('request').debug = true
   }
 
-  if (!projectKey) {
+  if (!config.projectKey) {
     console.error('Invalid usage: Please provide a value for --project-key');
     program.outputHelp();
     process.exit(1);
   }
 
-  if (!sourceEnvironment) {
+  if (!config.sourceEnvironment) {
     console.error('Invalid usage: Please provide a value for --source-env');
     program.outputHelp();
     process.exit(1);
   }
 
-  if (!destinationEnvironment) {
+  if (!config.destinationEnvironment) {
     console.error('Invalid usage: Please provide a value for --destination-env');
     program.outputHelp();
     process.exit(1);
   }
 
-  if (sourceEnvironment === destinationEnvironment) {
-    console.error('Invalid usage: Why are you syncing the same environment?!');
+  if (config.sourceEnvironment === config.destinationEnvironment) {
+    console.error('Invalid usage: Source and destination environments should be different');
     program.outputHelp();
     process.exit(1);
   }
 
-  if (!apiToken) {
+  if (!config.apiToken) {
     console.error('Invalid usage: Please provide a value for --api-token');
     program.outputHelp();
     process.exit(1);
   }
 
-  syncEnvironment(sourceEnvironment, destinationEnvironment);
+  syncEnvironment(config);
 }
