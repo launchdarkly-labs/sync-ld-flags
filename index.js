@@ -51,7 +51,8 @@ const copyValues = function (flag, config) {
     'targets',
     'rules',
     'prerequisites',
-    'fallthrough'
+    'fallthrough',
+    'offVariation'
   ];
   attributes.forEach(function (attr) {
     flag.environments[destinationEnvironment][attr] = flag.environments[sourceEnvironment][attr];
