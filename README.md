@@ -31,7 +31,7 @@ Quick setup
 
         node index.js --project-key PROJECT_KEY --source-env SOURCE_ENVIRONMENT_KEY --destination-env DEST_ENVIRONMENT_KEY --api-token API_TOKEN
    
-   Note: The environment key can be found in Account Settings within the LaunchDarkly application under the name of the desired environment.
+   Note: The environment key can be found in Account Settings within the LaunchDarkly application immediately under the name of the desired environment.
    
    Optionally pass a host override:
 
