@@ -24,8 +24,7 @@ function patchFlag(patch, key, config) {
 
 const progress = new cliProgress.SingleBar(
   {
-    format:
-      'progress {bar} {percentage}% | ETA: {eta}s | {value}/{total} | flag: {flag}',
+    format: 'progress {bar} {percentage}% | {value}/{total} | flag: {flag}',
   },
   cliProgress.Presets.shades_classic
 );
