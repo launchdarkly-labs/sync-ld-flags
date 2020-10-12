@@ -23,7 +23,10 @@ function patchFlag(patch, key, config) {
 }
 
 const progress = new cliProgress.SingleBar(
-  {},
+  {
+    format:
+      'progress {bar} {percentage}% | ETA: {eta}s | {value}/{total} | flag: {flag}',
+  },
   cliProgress.Presets.shades_classic
 );
 
@@ -159,6 +162,7 @@ function syncEnvironment(config = {}) {
   fetchFlags(config)
     .then((res) => {
       if (res.status !== 200) {
+        console.log(res);
         throw new Error('Error fetching flags');
       }
       return res.json();
@@ -171,6 +175,7 @@ function syncEnvironment(config = {}) {
       for (let i = 0; i < flags.length; i++) {
         await syncFlag(flags[i], config);
         progress.increment();
+        progress.update({ flag: flags[i].key });
       }
       progress.stop();
       if (Object.entries(failedFlags).length > 0)
