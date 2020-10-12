@@ -161,8 +161,7 @@ function syncEnvironment(config = {}) {
   fetchFlags(config)
     .then((res) => {
       if (res.status !== 200) {
-        console.log(res);
-        throw new Error('Error fetching flags');
+        throw new Error('Error fetching flags - ', res.status);
       }
       return res.json();
     })
