@@ -12,7 +12,7 @@ function patchFlag(patch, key, config) {
   const { baseUrl, projectKey, apiToken } = config;
   const requestOptions = {
     method: 'PATCH',
-    body: patch + 'f',
+    body: patch,
     headers: {
       Authorization: apiToken,
       'Content-Type': 'application/json',
@@ -170,17 +170,17 @@ function syncEnvironment(config = {}) {
     .then(async (flags) => {
       for (let i = 0; i < flags.length; i++) {
         await syncFlag(flags[i], config);
-        await sleep(50);
         progress.update(i + 1, { task: flags[i].key });
       }
       progress.stop();
       if (Object.entries(failedFlags).length > 0)
-        console.log('Failed to sync the following flags:\n', failedFlags);
+        console.log(
+          'Failed to sync the following flags:\n',
+          JSON.stringify(failedFlags, null, 2)
+        );
     });
 }
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+
 program
   .option('-p, --project-key <key>', 'Project key')
   .option('-s, --source-env <key>', 'Source environment')
