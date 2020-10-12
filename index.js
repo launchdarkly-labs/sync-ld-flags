@@ -170,7 +170,7 @@ function syncEnvironment(config = {}) {
     .then(async (flags) => {
       for (let i = 0; i < flags.length; i++) {
         await syncFlag(flags[i], config);
-        progress.update(i + 1, { task: flags[i].key });
+        progress.increment();
       }
       progress.stop();
       if (Object.entries(failedFlags).length > 0)
