@@ -4,43 +4,48 @@
 const DEFAULT_HOST = 'https://app.launchdarkly.com';
 
 const jsonpatch = require('fast-json-patch');
-const request = require('request');
+const fetch = require('node-fetch');
 const program = require('commander');
+const cliProgress = require('cli-progress');
 
-
-function patchFlag(patch, key, config, cb) {
+function patchFlag(patch, key, config) {
   const { baseUrl, projectKey, apiToken } = config;
   const requestOptions = {
-    url: `${baseUrl}/flags/${projectKey}/${key}`,
-    body: patch,
+    method: 'PATCH',
+    body: patch + 'f',
     headers: {
-      'Authorization': apiToken,
-      'Content-Type': 'application/json'
-    }
+      Authorization: apiToken,
+      'Content-Type': 'application/json',
+    },
   };
 
-  request.patch(requestOptions, cb);
+  return fetch(`${baseUrl}/flags/${projectKey}/${key}`, requestOptions);
 }
 
+const progress = new cliProgress.SingleBar(
+  {},
+  cliProgress.Presets.shades_classic
+);
+
 const fetchFlags = function (config, cb) {
-  const { baseUrl, projectKey, sourceEnvironment, destinationEnvironment, apiToken } = config;
+  const {
+    baseUrl,
+    projectKey,
+    sourceEnvironment,
+    destinationEnvironment,
+    apiToken,
+  } = config;
   const requestOptions = {
-    url: `${baseUrl}/flags/${projectKey}?summary=0&env=${sourceEnvironment}&env=${destinationEnvironment}`,
     headers: {
-      'Authorization': apiToken,
-      'Content-Type': 'application/json'
-    }
+      Authorization: apiToken,
+      'Content-Type': 'application/json',
+    },
   };
 
-  function callback(error, response, body) {
-    if (!error && response.statusCode === 200) {
-      cb(null, JSON.parse(body).items);
-    } else {
-      cb(error);
-    }
-  }
-
-  request(requestOptions, callback);
+  return fetch(
+    `${baseUrl}/flags/${projectKey}?summary=0&env=${sourceEnvironment}&env=${destinationEnvironment}`,
+    requestOptions
+  );
 };
 
 const copyValues = function (flag, config) {
@@ -52,10 +57,11 @@ const copyValues = function (flag, config) {
     'rules',
     'prerequisites',
     'fallthrough',
-    'offVariation'
+    'offVariation',
   ];
   attributes.forEach(function (attr) {
-    flag.environments[destinationEnvironment][attr] = flag.environments[sourceEnvironment][attr];
+    flag.environments[destinationEnvironment][attr] =
+      flag.environments[sourceEnvironment][attr];
   });
 };
 
@@ -88,7 +94,9 @@ const stripSegments = function (flag) {
         }
       }
       // filter out any empty items in the clause array (clauses we deleted above)
-      flag.environments[env].rules[i].clauses = flag.environments[env].rules[i].clauses.filter(c => !!c);
+      flag.environments[env].rules[i].clauses = flag.environments[env].rules[
+        i
+      ].clauses.filter((c) => !!c);
 
       // remove any rules that don't have any clauses (because we removed the only clause(s) above)
       if (!flag.environments[env].rules[i].clauses.length) {
@@ -96,9 +104,13 @@ const stripSegments = function (flag) {
       }
     }
     // filter out any empty items in the rules array (rules we deleted above)
-    flag.environments[env].rules = flag.environments[env].rules.filter(r => !!r);
+    flag.environments[env].rules = flag.environments[env].rules.filter(
+      (r) => !!r
+    );
   }
 };
+
+const failedFlags = {};
 
 function syncFlag(flag, config = {}) {
   const { omitSegments, sourceEnvironment, destinationEnvironment } = config;
@@ -113,50 +125,71 @@ function syncFlag(flag, config = {}) {
   const observer = jsonpatch.observe(flag);
 
   if (!fromFlag) {
-    throw new Error('Missing source environment flag. Did you specify the right project?');
+    throw new Error(
+      'Missing source environment flag. Did you specify the right project?'
+    );
   }
   if (!toFlag) {
-    throw new Error('Missing destination environment flag. Did you specify the right project?');
+    throw new Error(
+      'Missing destination environment flag. Did you specify the right project?'
+    );
   }
-  console.log('Syncing ' + flag.key);
+  // console.debug('Syncing ' + flag.key);
   copyValues(flag, config);
 
   const diff = jsonpatch.generate(observer);
 
   if (diff.length > 0) {
-    console.log('Modifying', flag.key, 'with', diff);
+    // console.debug('Modifying', flag.key, 'with', diff);
 
-    patchFlag(JSON.stringify(diff), flag.key, config, function (error, response, body) {
-      if (error) {
-        throw new Error(error);
+    return patchFlag(JSON.stringify(diff), flag.key, config).then((res) => {
+      if (res.status >= 400) {
+        failedFlags[
+          flag.key
+        ] = `PATCH failed (${res.status}) for flag ${flag.key} - ${res.statusText}`;
       }
-      if (response.statusCode >= 400) {
-        console.log('PATCH failed (' + response.statusCode + ') for flag', flag.key, '-', body)
-      }
+      return res.json();
     });
   } else {
-    console.log('No changes in ' + flag.key)
+    // console.debug('No changes in ' + flag.key);
   }
 }
 
 function syncEnvironment(config = {}) {
-  fetchFlags(config, function (err, flags) {
-    if (err) {
-      throw new Error('Error fetching flags');
-    }
-    flags.forEach(flag => syncFlag(flag, config));
-  });
+  fetchFlags(config)
+    .then((res) => {
+      if (res.status !== 200) {
+        throw new Error('Error fetching flags');
+      }
+      return res.json();
+    })
+    .then((res) => {
+      progress.start(res.items.length, 0);
+      return res.items;
+    })
+    .then(async (flags) => {
+      for (let i = 0; i < flags.length; i++) {
+        await syncFlag(flags[i], config);
+        await sleep(50);
+        progress.update(i + 1, { task: flags[i].key });
+      }
+      progress.stop();
+      if (Object.entries(failedFlags).length > 0)
+        console.log('Failed to sync the following flags:\n', failedFlags);
+    });
 }
-
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 program
-    .option('-p, --project-key <key>', 'Project key')
-    .option('-s, --source-env <key>', 'Source environment')
-    .option('-d, --destination-env <key>', 'Destination environment')
-    .option('-t, --api-token <token>', 'Api token')
-    .option('-o, --omit-segments', 'Omit segments when syncing')
-    .option('-H, --host <host>', 'Hostname override')
-    .option('-D, --debug', 'Enables HTTP debugging')
-    .parse(process.argv);
+  .option('-p, --project-key <key>', 'Project key')
+  .option('-s, --source-env <key>', 'Source environment')
+  .option('-d, --destination-env <key>', 'Destination environment')
+  .option('-t, --api-token <token>', 'Api token')
+  .option('-o, --omit-segments', 'Omit segments when syncing')
+  .option('-H, --host <host>', 'Hostname override')
+  .option('-D, --debug', 'Enables HTTP debugging')
+  .parse(process.argv);
 
 if (require.main === module) {
   const hostUrl = program.host || DEFAULT_HOST;
@@ -171,7 +204,8 @@ if (require.main === module) {
 
   if (program.debug) {
     // see https://github.com/request/request#debugging
-    require('request').debug = true
+    // require('request').debug = true;
+    console.log('debugging http requests not currently supported');
   }
 
   if (!config.projectKey) {
@@ -187,13 +221,17 @@ if (require.main === module) {
   }
 
   if (!config.destinationEnvironment) {
-    console.error('Invalid usage: Please provide a value for --destination-env');
+    console.error(
+      'Invalid usage: Please provide a value for --destination-env'
+    );
     program.outputHelp();
     process.exit(1);
   }
 
   if (config.sourceEnvironment === config.destinationEnvironment) {
-    console.error('Invalid usage: Source and destination environments should be different');
+    console.error(
+      'Invalid usage: Source and destination environments should be different'
+    );
     program.outputHelp();
     process.exit(1);
   }
