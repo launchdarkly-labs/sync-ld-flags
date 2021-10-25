@@ -144,12 +144,6 @@ async function syncFlag(flag, config = {}) {
   }
 }
 
-function sleep(ms) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
-
 async function syncEnvironment(config = {}) {
   fetchFlags(config, async function (err, flags) {
     if (err) {
