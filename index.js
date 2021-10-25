@@ -19,7 +19,12 @@ function patchFlag(patch, key, config, cb) {
     }
   };
 
-  request.patch(requestOptions, cb);
+  return new Promise(function(resolve, reject) {
+    request.patch(requestOptions, function(error, response, body) {
+      cb(error, response, body)
+      resolve(true)
+    });
+  });
 }
 
 const fetchFlags = function (config, cb) {
@@ -100,7 +105,7 @@ const stripSegments = function (flag) {
   }
 };
 
-function syncFlag(flag, config = {}) {
+async function syncFlag(flag, config = {}) {
   const { omitSegments, sourceEnvironment, destinationEnvironment } = config;
   // Remove rule ids because _id is read-only and cannot be written except when reordering rules
   stripRuleAndClauseIds(flag);
@@ -126,7 +131,7 @@ function syncFlag(flag, config = {}) {
   if (diff.length > 0) {
     console.log('Modifying', flag.key, 'with', diff);
 
-    patchFlag(JSON.stringify(diff), flag.key, config, function (error, response, body) {
+    await patchFlag(JSON.stringify(diff), flag.key, config, function (error, response, body) {
       if (error) {
         throw new Error(error);
       }
@@ -139,12 +144,14 @@ function syncFlag(flag, config = {}) {
   }
 }
 
-function syncEnvironment(config = {}) {
-  fetchFlags(config, function (err, flags) {
+async function syncEnvironment(config = {}) {
+  fetchFlags(config, async function (err, flags) {
     if (err) {
       throw new Error('Error fetching flags');
     }
-    flags.forEach(flag => syncFlag(flag, config));
+    for (const flag of flags) {
+      await syncFlag(flag, config);
+    }
   });
 }
 
