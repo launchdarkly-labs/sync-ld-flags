@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "sync": "node index.js",
+    "sync": "./sync-ld-flags",
     "test": "mocha"
   },
   "fig": {
