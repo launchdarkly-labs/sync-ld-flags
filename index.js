@@ -160,21 +160,21 @@ program
     .option('-s, --source-env <key>', 'Source environment')
     .option('-d, --destination-env <key>', 'Destination environment')
     .option('-t, --api-token <token>', 'Api token')
-    .option('-o, --omit-segments', 'Omit segments when syncing')
-    .option('-H, --host <host>', 'Hostname override')
-    .option('-D, --debug', 'Enables HTTP debugging')
+    .option('-o, --omit-segments', 'Omit segments when syncing', false)
+    .option('-H, --host <host>', 'Hostname override', DEFAULT_HOST)
+    .option('-D, --debug', 'Enables HTTP debugging', false)
     .parse(process.argv);
 
 if (require.main === module) {
   const options = program.opts();
-  const hostUrl = options.host || DEFAULT_HOST;
+  const hostUrl = options.host;
   const config = {
     projectKey: options.projectKey || '',
     sourceEnvironment: options.sourceEnv || '',
     destinationEnvironment: options.destinationEnv || '',
     apiToken: options.apiToken || '',
     baseUrl: hostUrl + '/api/v2',
-    omitSegments: !!options.omitSegments,
+    omitSegments: options.omitSegments,
   };
 
   if (options.debug) {
