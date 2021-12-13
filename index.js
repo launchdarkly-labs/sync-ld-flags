@@ -28,11 +28,12 @@ function patchFlag(patch, key, config, cb) {
 }
 
 const fetchFlags = function (config, cb) {
-  const { baseUrl, projectKey, sourceEnvironment, destinationEnvironment, apiToken, tags } = config;
-  let url = `${baseUrl}/flags/${projectKey}?summary=0&env=${sourceEnvironment}&env=${destinationEnvironment}`;
-  if (tags) {
-    url += "&filter=tags:" + tags.join('+');
-  }
+  const { baseUrl, projectKey, sourceEnvironment, destinationEnvironment, apiToken, tags, flag } = config;
+  let isSingle = flag ? true : false;
+  let url = isSingle
+    ? `${baseUrl}/flags/${projectKey}/${flag}?summary=0&env=${sourceEnvironment}&env=${destinationEnvironment}`
+    : `${baseUrl}/flags/${projectKey}?summary=0&env=${sourceEnvironment}&env=${destinationEnvironment}${tags ? ("&filter=tags:" + tags.join('+')) : '' }`;
+
   const requestOptions = {
     url: url,
     headers: {
@@ -43,7 +44,8 @@ const fetchFlags = function (config, cb) {
 
   function callback(error, response, body) {
     if (!error && response.statusCode === 200) {
-      cb(null, JSON.parse(body).items);
+      const parsed = JSON.parse(body);
+      cb(null, isSingle ? [parsed] : parsed.items);
     } else {
       cb(error);
     }
@@ -170,6 +172,7 @@ program
     .option('-s, --source-env <key>', 'Source environment')
     .option('-d, --destination-env <key>', 'Destination environment')
     .option('-t, --api-token <token>', 'API token')
+    .option('-f, --flag <flag>', 'Only sync the given flag')
     .option('-T, --tag <tags...>', 'Only sync flags with the given tag(s)')
     .option('-o, --omit-segments', 'Omit segments when syncing', false)
     .option('-H, --host <host>', 'Hostname override', DEFAULT_HOST)
@@ -187,6 +190,7 @@ if (require.main === module) {
     apiToken: options.apiToken,
     baseUrl: hostUrl + '/api/v2',
     omitSegments: options.omitSegments,
+    flag: options.flag,
     tags: options.tag,
     dryRun: options.dryRun,
   };
@@ -222,6 +226,12 @@ if (require.main === module) {
 
   if (!config.apiToken) {
     console.error('Invalid usage: Please provide a value for --api-token');
+    program.outputHelp();
+    process.exit(1);
+  }
+
+  if (config.flag && config.tags) {
+    console.error('Invalid usage: Only --flag OR --tag may be specified');
     program.outputHelp();
     process.exit(1);
   }

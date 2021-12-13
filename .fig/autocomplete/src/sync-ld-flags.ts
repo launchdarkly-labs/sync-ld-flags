@@ -1,11 +1,12 @@
-type Project = {
+interface BaseObject {
   name: string,
   key: string
 }
 
-type Environment = {
-  name: string,
-  key: string
+interface Project extends BaseObject {}
+interface Environment extends BaseObject {}
+interface Flag extends BaseObject {
+  description: string
 }
 
 const DEFAULT_HOST = 'https://app.launchdarkly.com';
@@ -73,6 +74,32 @@ const environmentGenerator: Fig.Generator = {
   },
 };
 
+const flagGenerator: Fig.Generator = {
+  script(context) {
+    const token = getOptionFromContext(context, tokenOpt);
+    const project = getOptionFromContext(context, projectOpt);
+    const env = getOptionFromContext(context, sourceOpt) || getOptionFromContext(context, destinationOpt);
+    const host = getOptionFromContext(context, hostOpt) || DEFAULT_HOST;
+
+    const params = env ? `env=${env}`: '';
+    
+    return `curl -s -X GET \
+    ${host}/api/v2/flags/${project}?${params} \
+    -H 'Authorization: ${token}'`;
+  },
+  postProcess(out) {
+    const flags: Flag[] = JSON.parse(out).items;
+
+    return flags.map<Fig.Suggestion>((item) => {
+      return {
+        name: item.key,
+        insertValue: item.key,
+        description: `${item.name} - ${item.description}`,
+      };
+    });
+  },
+};
+
 const projectOpt: Fig.Option = {
   name: ["--project-key", "-p"],
       description: "Project key",
@@ -99,6 +126,28 @@ const hostOpt: Fig.Option = {
   },
 };
 
+const sourceOpt: Fig.Option = {
+  name: ["--source-env", "-s"],
+  description: "Source environment",
+  dependsOn: ["-p"],
+  args: {
+    name: "source-env",
+    debounce: true,
+    generators: environmentGenerator,
+  },
+};
+
+const destinationOpt: Fig.Option = {
+  name: ["--destination-env", "-d"],
+  description: "Destination environment",
+  dependsOn: ["-p"],
+  args: {
+    name: "source-env",
+    debounce: true,
+    generators: environmentGenerator,
+  },
+};
+
 const completionSpec: Fig.Spec = {
   name: "sync-ld-flags",
   description: "LaunchDarkly Environment Synchronizer",
@@ -118,30 +167,22 @@ const completionSpec: Fig.Spec = {
       description: "Show help for sync-ld-flags",
     },
     projectOpt,
-    {
-      name: ["--source-env", "-s"],
-      description: "Source environment",
-      dependsOn: ["-p"],
-      args: {
-        name: "source-env",
-        debounce: true,
-        generators: environmentGenerator,
-      },
-    },
-    {
-      name: ["--destination-env", "-d"],
-      description: "Destination environment",
-      dependsOn: ["-p"],
-      args: {
-        name: "source-env",
-        debounce: true,
-        generators: environmentGenerator,
-      },
-    },
+    sourceOpt,
+    destinationOpt,
     tokenOpt,
     {
       name: ["--omit-segments", "-o"],
       description: "Omit segments when syncing",
+    },
+    {
+      name: ["--flag", "-f"],
+      description: "Only sync the given flag",
+      dependsOn: ["-p"],
+      args: {
+        name: "flag",
+        debounce: true,
+        generators: flagGenerator,
+      },
     },
     {
       // No API for grabbing these, at the moment
