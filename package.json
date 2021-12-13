@@ -4,7 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "sync": "node index.js",
     "test": "mocha"
+  },
+  "fig": {
+    "sync": {
+      "description": "Sync flags",
+      "icon": "🔄",
+      "priority": 1
+    }
   },
   "author": "",
   "license": "ISC",
