@@ -11,7 +11,7 @@
     "sync": {
       "description": "Sync flags",
       "icon": "🔄",
-      "priority": 1
+      "priority": 100
     }
   },
   "author": "",
