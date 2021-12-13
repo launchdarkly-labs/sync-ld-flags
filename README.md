@@ -49,3 +49,9 @@ The following properties will be synchronized:
    ```
 
    Use `-D` to enable HTTP debugging if needed.
+
+## Other
+
+This project supports [Fig](https://fig.io/) autocomplete!
+
+Add `--api-token` and (optionally) `--host` at the beginning of your commands and Fig will provide suggestions for your project and environment keys.
