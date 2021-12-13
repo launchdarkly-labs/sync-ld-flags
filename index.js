@@ -156,6 +156,7 @@ async function syncEnvironment(config = {}) {
 }
 
 program
+    .name('./sync-ld-flags')
     .option('-p, --project-key <key>', 'Project key')
     .option('-s, --source-env <key>', 'Source environment')
     .option('-d, --destination-env <key>', 'Destination environment')
