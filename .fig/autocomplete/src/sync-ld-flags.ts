@@ -8,10 +8,28 @@ type Environment = {
   key: string
 }
 
+const getOptionFromContext = (context, option: Fig.Option) => {
+  const index = getOptionIndexFromContext(context, option);
+  const value = index > -1 ? context[index+1] : '';
+
+  return value;
+}
+
+const getOptionIndexFromContext = (context, option: Fig.Option) => {
+  for (const name of option.name) {
+    const idx = context.indexOf(name);
+    if (idx > -1) {
+      return idx;
+    }
+  }
+
+  return -1;
+}
+
 const projectGenerator: Fig.Generator = {
   script(context) {
-    const token = context[context.indexOf("-t")+1];
-    
+    const token = getOptionFromContext(context, tokenOpt);
+
     // to do change url base
     return `curl -s -X GET \
     https://app.ld.catamorphic.com/api/v2/projects \
@@ -32,8 +50,8 @@ const projectGenerator: Fig.Generator = {
 
 const environmentGenerator: Fig.Generator = {
   script(context) {
-    const project = context[context.indexOf("-p")+1];
-    const token = context[context.indexOf("-t")+1];
+    const token = getOptionFromContext(context, tokenOpt);
+    const project = getOptionFromContext(context, projectOpt);
     
     // to do change url base
     return `curl -s -X GET \
@@ -51,7 +69,25 @@ const environmentGenerator: Fig.Generator = {
       };
     });
   },
-}; 
+};
+
+const projectOpt: Fig.Option = {
+  name: ["--project-key", "-p"],
+      description: "Project key",
+      args: {
+        name: "project-key",
+        debounce: true,
+        generators: projectGenerator,
+      }
+};
+
+const tokenOpt: Fig.Option = {
+  name: ["--api-token", "-t"],
+  description: "API token",
+  args: {
+    name: "api-token"
+  }
+};
 
 const completionSpec: Fig.Spec = {
   name: "sync-ld-flags",
@@ -71,15 +107,7 @@ const completionSpec: Fig.Spec = {
       name: ["--help", "-h"],
       description: "Show help for sync-ld-flags",
     },
-    {
-      name: ["--project-key", "-p"],
-      description: "Project key",
-      args: {
-        name: "project-key",
-        debounce: true,
-        generators: projectGenerator,
-      }
-    },
+    projectOpt,
     {
       name: ["--source-env", "-s"],
       description: "Source environment",
@@ -100,13 +128,7 @@ const completionSpec: Fig.Spec = {
         generators: environmentGenerator,
       },
     },
-    {
-      name: ["--api-token", "-t"],
-      description: "API token",
-      args: {
-        name: "api-token"
-      }
-    },
+    tokenOpt,
     {
       name: ["--omit-segments", "-o"],
       description: "Omit segments when syncing",
