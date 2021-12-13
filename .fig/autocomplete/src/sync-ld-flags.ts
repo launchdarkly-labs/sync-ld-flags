@@ -144,6 +144,14 @@ const completionSpec: Fig.Spec = {
       description: "Omit segments when syncing",
     },
     {
+      // No API for grabbing these, at the moment
+      name: ["--tag", "-T"],
+      description: "Only sync flags with the given tag(s)",
+      args: {
+        name: "tag",
+      },
+    },
+    {
       name: ["--dry-run"],
       description: "Preview syncing changes",
     },
