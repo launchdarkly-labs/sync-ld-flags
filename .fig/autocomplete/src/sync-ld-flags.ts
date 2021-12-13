@@ -3,13 +3,23 @@ interface BaseObject {
   key: string
 }
 
-interface Project extends BaseObject {}
-interface Environment extends BaseObject {}
+interface WithColor {
+  color: string
+}
+
+interface Project extends BaseObject, WithColor {}
+interface Environment extends BaseObject, WithColor {}
 interface Flag extends BaseObject {
   description: string
 }
 
 const DEFAULT_HOST = 'https://app.launchdarkly.com';
+
+// Brand colors
+const LD_BLUE_HEX = '405BFF';
+const LD_PURPLE_HEX = 'A34FDE';
+const LD_PINK_HEX = 'FF386B';
+const LD_CYAN_HEX = '3DD6F5';
 
 const getOptionFromContext = (context, option: Fig.Option) => {
   const index = getOptionIndexFromContext(context, option);
@@ -46,6 +56,7 @@ const projectGenerator: Fig.Generator = {
         name: item.key,
         insertValue: item.key,
         description: item.name,
+        icon: `fig://template?color=${LD_BLUE_HEX}&badge=P`
       };
     });
   },
@@ -69,6 +80,7 @@ const environmentGenerator: Fig.Generator = {
         name: item.key,
         insertValue: item.key,
         description: item.name,
+        icon: `fig://template?color=${item.color}&badge=E`
       };
     });
   },
@@ -95,6 +107,7 @@ const flagGenerator: Fig.Generator = {
         name: item.key,
         insertValue: item.key,
         description: `${item.name} - ${item.description}`,
+        icon: `fig://template?color=${LD_PURPLE_HEX}&badge=⚑`
       };
     });
   },
@@ -102,17 +115,21 @@ const flagGenerator: Fig.Generator = {
 
 const projectOpt: Fig.Option = {
   name: ["--project-key", "-p"],
-      description: "Project key",
-      args: {
-        name: "project-key",
-        debounce: true,
-        generators: projectGenerator,
-      }
+  description: "Project key",
+  icon: `fig://template?color=${LD_BLUE_HEX}&badge=P`,
+  priority: 800,
+  args: {
+    name: "project-key",
+    debounce: true,
+    generators: projectGenerator,
+  }
 };
 
 const tokenOpt: Fig.Option = {
   name: ["--api-token", "-t"],
   description: "API token",
+  icon: `fig://icon?type=asterisk`,
+  priority: 900,
   args: {
     name: "api-token"
   }
@@ -121,6 +138,7 @@ const tokenOpt: Fig.Option = {
 const hostOpt: Fig.Option = {
   name: ["--host", "-H"],
   description: "Hostname override",
+  icon: "fig://template?color=${}badge=🌐",
   args: {
     name: "host",
   },
@@ -130,6 +148,8 @@ const sourceOpt: Fig.Option = {
   name: ["--source-env", "-s"],
   description: "Source environment",
   dependsOn: ["-p"],
+  icon: `fig://template?color=${LD_CYAN_HEX}&badge=E`,
+  priority: 700,
   args: {
     name: "source-env",
     debounce: true,
@@ -141,6 +161,8 @@ const destinationOpt: Fig.Option = {
   name: ["--destination-env", "-d"],
   description: "Destination environment",
   dependsOn: ["-p"],
+  icon: `fig://template?color=${LD_CYAN_HEX}&badge=E`,
+  priority: 700,
   args: {
     name: "source-env",
     debounce: true,
@@ -151,16 +173,6 @@ const destinationOpt: Fig.Option = {
 const completionSpec: Fig.Spec = {
   name: "sync-ld-flags",
   description: "LaunchDarkly Environment Synchronizer",
-  // subcommands: [
-  //   {
-  //     name: "my_subcommand",
-  //     description: "Example subcommand",
-  //     subcommands: [{
-  //       name: "my_nested_subcommand",
-  //       description: "Nested subcommand, example usage: 'sync-ld-flags my_subcommand my_nested_subcommand'"
-  //     }],
-  //   },
-  // ],
   options: [
     {
       name: ["--help", "-h"],
@@ -177,6 +189,7 @@ const completionSpec: Fig.Spec = {
     {
       name: ["--flag", "-f"],
       description: "Only sync the given flag",
+      icon: `fig://template?color=${LD_PURPLE_HEX}&badge=⚑`,
       dependsOn: ["-p"],
       args: {
         name: "flag",
@@ -188,6 +201,7 @@ const completionSpec: Fig.Spec = {
       // No API for grabbing these, at the moment
       name: ["--tag", "-T"],
       description: "Only sync flags with the given tag(s)",
+      icon: `fig://template?color=${LD_PINK_HEX}&badge=🏷`,
       args: {
         name: "tag",
       },
@@ -206,7 +220,5 @@ const completionSpec: Fig.Spec = {
       description: "Enables HTTP debugging",
     },
   ],
-  // Only uncomment if sync-ld-flags takes an argument
-  // args: {}
 };
 export default completionSpec;
