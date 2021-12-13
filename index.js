@@ -166,17 +166,18 @@ program
     .parse(process.argv);
 
 if (require.main === module) {
-  const hostUrl = program.host || DEFAULT_HOST;
+  const options = program.opts();
+  const hostUrl = options.host || DEFAULT_HOST;
   const config = {
-    projectKey: program.projectKey || '',
-    sourceEnvironment: program.sourceEnv || '',
-    destinationEnvironment: program.destinationEnv || '',
-    apiToken: program.apiToken || '',
+    projectKey: options.projectKey || '',
+    sourceEnvironment: options.sourceEnv || '',
+    destinationEnvironment: options.destinationEnv || '',
+    apiToken: options.apiToken || '',
     baseUrl: hostUrl + '/api/v2',
-    omitSegments: !!program.omitSegments,
+    omitSegments: !!options.omitSegments,
   };
 
-  if (program.debug) {
+  if (options.debug) {
     // see https://github.com/request/request#debugging
     require('request').debug = true
   }
