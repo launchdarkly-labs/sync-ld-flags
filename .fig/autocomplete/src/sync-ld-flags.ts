@@ -198,6 +198,10 @@ const completionSpec: Fig.Spec = {
     },
     hostOpt,
     {
+      name: ["--verbose", "-v"],
+      description: "Enable verbose logging",
+    },
+    {
       name: ["--debug", "-D"],
       description: "Enables HTTP debugging",
     },

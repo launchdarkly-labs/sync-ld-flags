@@ -124,7 +124,7 @@ const stripSegments = function (flag) {
 };
 
 async function syncFlag(flag, config = {}) {
-  const { dryRun, omitSegments, sourceEnvironment, destinationEnvironment } = config;
+  const { omitSegments, dryRun, verbose } = config;
   // Remove rule ids because _id is read-only and cannot be written except when reordering rules
   stripRuleAndClauseIds(flag);
   if (omitSegments) {
@@ -133,7 +133,8 @@ async function syncFlag(flag, config = {}) {
   }
   const observer = jsonpatch.observe(flag);
 
-  if (!dryRun) console.log('Syncing ' + flag.key);
+  if (verbose) console.log(`Checking ${flag.key}`);
+
   copyValues(flag, config);
 
   const diff = jsonpatch.generate(observer);
@@ -141,22 +142,22 @@ async function syncFlag(flag, config = {}) {
   if (diff.length > 0) {
     flagsWithChanges += 1;
     if (dryRun) {
-      console.log(`Preview changes for ${flag.key}`, diff);
+      console.log(`Preview changes for ${flag.key}:\n`, diff);
       return;
     }
-    console.log('Modifying', flag.key, 'with', diff);
+    console.log(`Modifying ${flag.key} with:\n`, diff);
 
     await patchFlag(JSON.stringify(diff), flag.key, config, function (error, response, body) {
       if (error) {
         throw new Error(error);
       }
       if (response.statusCode >= 400) {
-        console.log('PATCH failed (' + response.statusCode + ') for flag', flag.key, '-', body)
+        console.error(`PATCH failed (${response.statusCode}) for flag ${flag.key}:\n`, body)
       }
     });
   } else {
     flagsWithoutChanges += 1;
-    console.log('No changes in ' + flag.key)
+    if (verbose) console.log(`No changes in ${flag.key}`)
   }
 }
 
@@ -196,6 +197,7 @@ program
     .option('-T, --tag <tags...>', 'Only sync flags with the given tag(s)')
     .option('-o, --omit-segments', 'Omit segments when syncing', false)
     .option('-H, --host <host>', 'Hostname override', DEFAULT_HOST)
+    .option('-v, --verbose', 'Enable verbose logging', false)
     .option('--dry-run', 'Preview syncing changes', false)
     .option('-D, --debug', 'Enables HTTP debugging', false)
     .parse(process.argv);
@@ -213,6 +215,7 @@ if (require.main === module) {
     flag: options.flag,
     tags: options.tag,
     dryRun: options.dryRun,
+    verbose: options.verbose,
   };
 
   if (options.debug) {
