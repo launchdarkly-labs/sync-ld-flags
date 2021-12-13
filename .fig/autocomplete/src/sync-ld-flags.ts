@@ -143,6 +143,10 @@ const completionSpec: Fig.Spec = {
       name: ["--omit-segments", "-o"],
       description: "Omit segments when syncing",
     },
+    {
+      name: ["--dry-run"],
+      description: "Preview syncing changes",
+    },
     hostOpt,
     {
       name: ["--debug", "-D"],

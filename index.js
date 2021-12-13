@@ -110,7 +110,7 @@ const stripSegments = function (flag) {
 };
 
 async function syncFlag(flag, config = {}) {
-  const { omitSegments, sourceEnvironment, destinationEnvironment } = config;
+  const { dryRun, omitSegments, sourceEnvironment, destinationEnvironment } = config;
   // Remove rule ids because _id is read-only and cannot be written except when reordering rules
   stripRuleAndClauseIds(flag);
   if (omitSegments) {
@@ -127,12 +127,16 @@ async function syncFlag(flag, config = {}) {
   if (!toFlag) {
     throw new Error('Missing destination environment flag. Did you specify the right project?');
   }
-  console.log('Syncing ' + flag.key);
+  if (!dryRun) console.log('Syncing ' + flag.key);
   copyValues(flag, config);
 
   const diff = jsonpatch.generate(observer);
 
   if (diff.length > 0) {
+    if (dryRun) {
+      console.log(`Preview changes for ${flag.key}`, diff);
+      return;
+    }
     console.log('Modifying', flag.key, 'with', diff);
 
     await patchFlag(JSON.stringify(diff), flag.key, config, function (error, response, body) {
@@ -169,6 +173,7 @@ program
     .option('-T, --tag <tags...>', 'Only sync flags with the given tag(s)')
     .option('-o, --omit-segments', 'Omit segments when syncing', false)
     .option('-H, --host <host>', 'Hostname override', DEFAULT_HOST)
+    .option('--dry-run', 'Preview syncing changes', false)
     .option('-D, --debug', 'Enables HTTP debugging', false)
     .parse(process.argv);
 
@@ -183,6 +188,7 @@ if (require.main === module) {
     baseUrl: hostUrl + '/api/v2',
     omitSegments: options.omitSegments,
     tags: options.tag,
+    dryRun: options.dryRun,
   };
 
   if (options.debug) {
