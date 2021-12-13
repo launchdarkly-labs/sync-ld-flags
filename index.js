@@ -7,6 +7,9 @@ const jsonpatch = require('fast-json-patch');
 const request = require('request');
 const program = require('commander');
 
+// Use to calculcate changing flags
+let flagsWithChanges = 0;
+let flagsWithoutChanges = 0;
 
 function patchFlag(patch, key, config, cb) {
   const { baseUrl, projectKey, apiToken } = config;
@@ -135,6 +138,7 @@ async function syncFlag(flag, config = {}) {
   const diff = jsonpatch.generate(observer);
 
   if (diff.length > 0) {
+    flagsWithChanges += 1;
     if (dryRun) {
       console.log(`Preview changes for ${flag.key}`, diff);
       return;
@@ -150,6 +154,7 @@ async function syncFlag(flag, config = {}) {
       }
     });
   } else {
+    flagsWithoutChanges += 1;
     console.log('No changes in ' + flag.key)
   }
 }
@@ -162,6 +167,10 @@ async function syncEnvironment(config = {}) {
     for (const flag of flags) {
       await syncFlag(flag, config);
     }
+
+    const modifiedMessage = config.dryRun ? 'To be modified' : 'Modified';
+
+    console.log(`${modifiedMessage}: ${flagsWithChanges}, No changes required: ${flagsWithoutChanges}`)
   });
 }
 
