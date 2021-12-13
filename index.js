@@ -28,9 +28,13 @@ function patchFlag(patch, key, config, cb) {
 }
 
 const fetchFlags = function (config, cb) {
-  const { baseUrl, projectKey, sourceEnvironment, destinationEnvironment, apiToken } = config;
+  const { baseUrl, projectKey, sourceEnvironment, destinationEnvironment, apiToken, tags } = config;
+  let url = `${baseUrl}/flags/${projectKey}?summary=0&env=${sourceEnvironment}&env=${destinationEnvironment}`;
+  if (tags) {
+    url += "&filter=tags:" + tags.join('+');
+  }
   const requestOptions = {
-    url: `${baseUrl}/flags/${projectKey}?summary=0&env=${sourceEnvironment}&env=${destinationEnvironment}`,
+    url: url,
     headers: {
       'Authorization': apiToken,
       'Content-Type': 'application/json'
@@ -161,7 +165,8 @@ program
     .option('-p, --project-key <key>', 'Project key')
     .option('-s, --source-env <key>', 'Source environment')
     .option('-d, --destination-env <key>', 'Destination environment')
-    .option('-t, --api-token <token>', 'Api token')
+    .option('-t, --api-token <token>', 'API token')
+    .option('-T, --tag <tags...>', 'Only sync flags with the given tag(s)')
     .option('-o, --omit-segments', 'Omit segments when syncing', false)
     .option('-H, --host <host>', 'Hostname override', DEFAULT_HOST)
     .option('-D, --debug', 'Enables HTTP debugging', false)
@@ -171,12 +176,13 @@ if (require.main === module) {
   const options = program.opts();
   const hostUrl = options.host;
   const config = {
-    projectKey: options.projectKey || '',
-    sourceEnvironment: options.sourceEnv || '',
-    destinationEnvironment: options.destinationEnv || '',
-    apiToken: options.apiToken || '',
+    projectKey: options.projectKey,
+    sourceEnvironment: options.sourceEnv,
+    destinationEnvironment: options.destinationEnv,
+    apiToken: options.apiToken,
     baseUrl: hostUrl + '/api/v2',
     omitSegments: options.omitSegments,
+    tags: options.tag,
   };
 
   if (options.debug) {
