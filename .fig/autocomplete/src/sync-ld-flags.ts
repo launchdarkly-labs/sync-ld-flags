@@ -1,3 +1,30 @@
+type Project = {
+  name: string,
+  key: string
+}
+
+const projectGenerator: Fig.Generator = {
+  script(context) {
+    const token = context[context.indexOf("-t")];
+    
+    // to do change url base
+    return `curl -s -X GET \
+    https://app.ld.catamorphic.com/api/v2/projects \
+    -H 'Authorization: ${token}'`;
+  },
+  postProcess(out) {
+    const projects: Project[] = JSON.parse(out).items;
+
+    return projects.map<Fig.Suggestion>((item) => {
+      return {
+        name: item.key,
+        insertValue: item.key,
+        description: item.name,
+      };
+    });
+  },
+}; 
+
 const completionSpec: Fig.Spec = {
   name: "sync-ld-flags",
   description: "LaunchDarkly Environment Synchronizer",
@@ -19,6 +46,11 @@ const completionSpec: Fig.Spec = {
     {
       name: ["--project-key", "-p"],
       description: "Project key",
+      args: {
+        name: "project-key",
+        debounce: true,
+        generators: projectGenerator,
+      }
     },
     {
       name: ["--source-env", "-s"],
@@ -31,6 +63,9 @@ const completionSpec: Fig.Spec = {
     {
       name: ["--api-token", "-t"],
       description: "API token",
+      args: {
+        name: "token"
+      }
     },
     {
       name: ["--omit-segments", "-o"],
