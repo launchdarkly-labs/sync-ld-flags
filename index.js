@@ -46,11 +46,20 @@ const fetchFlags = function (config, cb) {
   };
 
   function callback(error, response, body) {
-    if (!error && response.statusCode === 200) {
+    if (error) {
+      return cb(error);
+    }
+    
+    if (response.statusCode === 200) {
       const parsed = JSON.parse(body);
-      cb(null, isSingle ? [parsed] : parsed.items);
-    } else {
-      cb(error);
+      return cb(null, isSingle ? [parsed] : parsed.items);
+    }
+    
+    try {
+      const parsed = JSON.parse(body);
+      return cb(parsed);
+    } catch(err) {
+      cb(err)
     }
   }
 
@@ -122,16 +131,8 @@ async function syncFlag(flag, config = {}) {
     // Remove segments because segments are not guaranteed to exist across environments
     stripSegments(flag);
   }
-  const fromFlag = flag.environments[sourceEnvironment];
-  const toFlag = flag.environments[destinationEnvironment];
   const observer = jsonpatch.observe(flag);
 
-  if (!fromFlag) {
-    throw new Error('Missing source environment flag. Did you specify the right project?');
-  }
-  if (!toFlag) {
-    throw new Error('Missing destination environment flag. Did you specify the right project?');
-  }
   if (!dryRun) console.log('Syncing ' + flag.key);
   copyValues(flag, config);
 
@@ -162,8 +163,18 @@ async function syncFlag(flag, config = {}) {
 async function syncEnvironment(config = {}) {
   fetchFlags(config, async function (err, flags) {
     if (err) {
-      throw new Error('Error fetching flags');
+      const message = err.message || '';
+      const matches = message.match(/^Unknown environment key: (?<envKey>.+)$/);
+      if (matches.groups && matches.groups.envKey) {
+        const envKey = matches.groups.envKey;
+        console.error(`Invalid ${config.sourceEnv === envKey ? "source" : "destination"} environment "${envKey}". Did you specify the right project?`);
+      } else {
+        console.error('Error fetching flags\n', err);
+      }
+
+      process.exit(1)
     }
+
     for (const flag of flags) {
       await syncFlag(flag, config);
     }
