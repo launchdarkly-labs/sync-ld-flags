@@ -8,6 +8,8 @@ type Environment = {
   key: string
 }
 
+const DEFAULT_HOST = 'https://app.launchdarkly.com';
+
 const getOptionFromContext = (context, option: Fig.Option) => {
   const index = getOptionIndexFromContext(context, option);
   const value = index > -1 ? context[index+1] : '';
@@ -29,10 +31,10 @@ const getOptionIndexFromContext = (context, option: Fig.Option) => {
 const projectGenerator: Fig.Generator = {
   script(context) {
     const token = getOptionFromContext(context, tokenOpt);
+    const host = getOptionFromContext(context, hostOpt) || DEFAULT_HOST;
 
-    // to do change url base
     return `curl -s -X GET \
-    https://app.ld.catamorphic.com/api/v2/projects \
+    ${host}/api/v2/projects \
     -H 'Authorization: ${token}'`;
   },
   postProcess(out) {
@@ -52,10 +54,10 @@ const environmentGenerator: Fig.Generator = {
   script(context) {
     const token = getOptionFromContext(context, tokenOpt);
     const project = getOptionFromContext(context, projectOpt);
+    const host = getOptionFromContext(context, hostOpt) || DEFAULT_HOST;
     
-    // to do change url base
     return `curl -s -X GET \
-    https://app.ld.catamorphic.com/api/v2/projects/${project} \
+    ${host}/api/v2/projects/${project} \
     -H 'Authorization: ${token}'`;
   },
   postProcess(out) {
@@ -87,6 +89,14 @@ const tokenOpt: Fig.Option = {
   args: {
     name: "api-token"
   }
+};
+
+const hostOpt: Fig.Option = {
+  name: ["--host", "-H"],
+  description: "Hostname override",
+  args: {
+    name: "host",
+  },
 };
 
 const completionSpec: Fig.Spec = {
@@ -133,10 +143,7 @@ const completionSpec: Fig.Spec = {
       name: ["--omit-segments", "-o"],
       description: "Omit segments when syncing",
     },
-    {
-      name: ["--host", "-H"],
-      description: "Hostname override",
-    },
+    hostOpt,
     {
       name: ["--debug", "-D"],
       description: "Enables HTTP debugging",
