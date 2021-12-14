@@ -204,6 +204,8 @@ const completionSpec: Fig.Spec = {
       icon: `fig://template?color=${LD_PINK_HEX}&badge=🏷`,
       args: {
         name: "tag",
+        isVariadic: true,
+        optionsCanBreakVariadicArg: true,
       },
     },
     {
