@@ -24,7 +24,7 @@ The following properties will be synchronized:
 1. Install with `npm`
 
    ```
-   npm install --save
+   npm install
    ```
 
 2. Run the script, passing in the project key, source and destination environments, and API token:
@@ -49,6 +49,32 @@ The following properties will be synchronized:
    ```
 
    Use `-D` to enable HTTP debugging if needed.
+
+## All options
+
+Usage:
+
+```
+./sync-ld-flags [options]
+```
+
+Options:
+
+```
+  -p, --project-key <key>      Project key
+  -s, --source-env <key>       Source environment
+  -d, --destination-env <key>  Destination environment
+  -t, --api-token <token>      API token
+  -f, --flag <flag>            Only sync the given flag
+  -T, --tag <tags...>          Only sync flags with the given tag(s)
+  -o, --omit-segments          Omit segments when syncing (default: false)
+  -H, --host <host>            Hostname override (default:
+                               "https://app.launchdarkly.com")
+  -v, --verbose                Enable verbose logging (default: false)
+  --dry-run                    Preview syncing changes (default: false)
+  -D, --debug                  Enables HTTP debugging (default: false)
+  -h, --help                   display help for command
+```
 
 ## Other
 
