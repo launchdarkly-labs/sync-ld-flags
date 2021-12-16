@@ -145,6 +145,7 @@ const apiGenerators: Record<string, Fig.Generator> = {
 const projectOpt: Fig.Option = {
   name: ["-p", "--project-key"],
   description: "Project key",
+  isRepeatable: false,
   icon: ICON_PROJECT,
   priority: 800,
   args: {
@@ -158,6 +159,7 @@ const projectOpt: Fig.Option = {
 const tokenOpt: Fig.Option = {
   name: ["-t", "--api-token"],
   description: "LaunchDarkly personal access token with write-level access.",
+  isRepeatable: false,
   icon: `fig://icon?type=asterisk`,
   priority: 900,
   args: {
@@ -169,6 +171,7 @@ const tokenOpt: Fig.Option = {
 const hostOpt: Fig.Option = {
   name: ["-H", "--host"],
   description: "Hostname override",
+  isRepeatable: false,
   icon: "fig://template?color=${}badge=🌐",
   args: {
     name: "URI",
@@ -180,6 +183,7 @@ const sourceOpt: Fig.Option = {
   name: ["-s", "--source-env"],
   description: "Source environment",
   dependsOn: ["-p"],
+  isRepeatable: false,
   icon: ICON_ENV,
   priority: 700,
   args: {
@@ -194,6 +198,7 @@ const destinationOpt: Fig.Option = {
   name: ["-d", "--destination-env"],
   description: "Destination environment",
   dependsOn: ["-p"],
+  isRepeatable: false,
   icon: ICON_ENV,
   priority: 700,
   args: {
@@ -219,10 +224,12 @@ const completionSpec: Fig.Spec = {
     {
       name: ["-o", "--omit-segments"],
       description: "Omit segments when syncing",
+      isRepeatable: false,
     },
     {
       name: ["-f", "--flag"],
       description: "Sync only the specified flag",
+      isRepeatable: false,
       icon: ICON_FLAG,
       exclusiveOn: ["-T", "--tag"],
       args: {
@@ -249,15 +256,18 @@ const completionSpec: Fig.Spec = {
     {
       name: ["--dry-run"],
       description: "Preview changes",
+      isRepeatable: false,
     },
     hostOpt,
     {
       name: ["-v", "--verbose"],
       description: "Enable verbose logging",
+      isRepeatable: false,
     },
     {
       name: ["-D", "--debug"],
       description: "Enable HTTP debugging",
+      isRepeatable: false,
     },
   ],
 };
