@@ -64,15 +64,17 @@ Options:
   -p, --project-key <key>      Project key
   -s, --source-env <key>       Source environment
   -d, --destination-env <key>  Destination environment
-  -t, --api-token <token>      API token
-  -f, --flag <flag>            Only sync the given flag
-  -T, --tag <tags...>          Only sync flags with the given tag(s)
+  -t, --api-token <token>      LaunchDarkly personal access token with
+                               write-level access.
+  -f, --flag <flag>            Sync only the specified flag
+  -T, --tag <tags...>          Sync flags with the given tag(s). Only flags
+                               with all tags will sync.
   -o, --omit-segments          Omit segments when syncing (default: false)
   -H, --host <host>            Hostname override (default:
                                "https://app.launchdarkly.com")
   -v, --verbose                Enable verbose logging (default: false)
-  --dry-run                    Preview syncing changes (default: false)
-  -D, --debug                  Enables HTTP debugging (default: false)
+  --dry-run                    Preview changes (default: false)
+  -D, --debug                  Enable HTTP debugging (default: false)
   -h, --help                   display help for command
 ```
 
@@ -81,3 +83,27 @@ Options:
 This project supports [Fig](https://fig.io/) autocomplete!
 
 Add `--api-token` and (optionally) `--host` at the beginning of your commands and Fig will provide suggestions for your project and environment keys.
+
+Want to set these configuration variables more easily? Auto-complete keys and servers by using a config file:
+
+Add the following configuration to `~/.config/ldc.json`
+
+```json
+{
+    "<NAME>": {
+        "apitoken": "<your api token>",
+        "server": "<[OPTIONAL] default is https://app.launchdarkly.com>"
+    }
+}
+```
+
+**Example**:
+
+```json
+{
+    "staging": {
+        "apitoken": "api-foobarfoobarfoobarfoobar",
+        "server": "https://your-launch-darkly-deploy.com"
+    }
+}
+```
