@@ -192,7 +192,7 @@ program
     .option('-p, --project-key <key>', 'Project key')
     .option('-s, --source-env <key>', 'Source environment')
     .option('-d, --destination-env <key>', 'Destination environment')
-    .option('-t, --api-token <token>', 'API token')
+    .option('-t, --api-token <token>', 'LaunchDarkly personal access token with write-level access.')
     .option('-f, --flag <flag>', 'Sync only the specified flag')
     .option('-T, --tag <tags...>', 'Sync flags with the given tag(s). Only flags with all tags will sync.')
     .option('-o, --omit-segments', 'Omit segments when syncing', false)

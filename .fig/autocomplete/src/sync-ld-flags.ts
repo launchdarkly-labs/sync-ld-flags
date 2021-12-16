@@ -140,7 +140,7 @@ const apiGenerators: Record<string, Fig.Generator> = {
 };
 
 const projectOpt: Fig.Option = {
-  name: ["--project-key", "-p"],
+  name: ["-p", "--project-key"],
   description: "Project key",
   icon: `fig://template?color=${LD_BLUE_HEX}&badge=P`,
   priority: 800,
@@ -153,18 +153,18 @@ const projectOpt: Fig.Option = {
 };
 
 const tokenOpt: Fig.Option = {
-  name: ["--api-token", "-t"],
-  description: "API token",
+  name: ["-t", "--api-token"],
+  description: "LaunchDarkly personal access token with write-level access.",
   icon: `fig://icon?type=asterisk`,
   priority: 900,
   args: {
     name: "string",
-    description: "API token"
+    description: "API access token"
   }
 };
 
 const hostOpt: Fig.Option = {
-  name: ["--host", "-H"],
+  name: ["-H", "--host"],
   description: "Hostname override",
   icon: "fig://template?color=${}badge=🌐",
   args: {
@@ -174,7 +174,7 @@ const hostOpt: Fig.Option = {
 };
 
 const sourceOpt: Fig.Option = {
-  name: ["--source-env", "-s"],
+  name: ["-s", "--source-env"],
   description: "Source environment",
   dependsOn: ["-p"],
   icon: `fig://template?color=${LD_CYAN_HEX}&badge=E`,
@@ -188,7 +188,7 @@ const sourceOpt: Fig.Option = {
 };
 
 const destinationOpt: Fig.Option = {
-  name: ["--destination-env", "-d"],
+  name: ["-d", "--destination-env"],
   description: "Destination environment",
   dependsOn: ["-p"],
   icon: `fig://template?color=${LD_CYAN_HEX}&badge=E`,
@@ -203,10 +203,10 @@ const destinationOpt: Fig.Option = {
 
 const completionSpec: Fig.Spec = {
   name: "sync-ld-flags",
-  description: "LaunchDarkly Environment Synchronizer",
+  description: "Copy flag settings from one environment to another.",
   options: [
     {
-      name: ["--help", "-h"],
+      name: ["-h", "--help"],
       description: "Show help for sync-ld-flags",
     },
     projectOpt,
@@ -214,11 +214,11 @@ const completionSpec: Fig.Spec = {
     destinationOpt,
     tokenOpt,
     {
-      name: ["--omit-segments", "-o"],
+      name: ["-o", "--omit-segments"],
       description: "Omit segments when syncing",
     },
     {
-      name: ["--flag", "-f"],
+      name: ["-f", "--flag"],
       description: "Sync only the specified flag",
       icon: `fig://template?color=${LD_PURPLE_HEX}&badge=⚑`,
       dependsOn: ["-p"],
@@ -230,7 +230,7 @@ const completionSpec: Fig.Spec = {
       },
     },
     {
-      name: ["--tag", "-T"],
+      name: ["-T", "--tag"],
       description: "Sync flags with the specified tag(s). Only flags with all tags will sync.",
       icon: `fig://template?color=${LD_PINK_HEX}&badge=🏷`,
       args: {
@@ -248,11 +248,11 @@ const completionSpec: Fig.Spec = {
     },
     hostOpt,
     {
-      name: ["--verbose", "-v"],
+      name: ["-v", "--verbose"],
       description: "Enable verbose logging",
     },
     {
-      name: ["--debug", "-D"],
+      name: ["-D", "--debug"],
       description: "Enable HTTP debugging",
     },
   ],
