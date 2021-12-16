@@ -193,13 +193,13 @@ program
     .option('-s, --source-env <key>', 'Source environment')
     .option('-d, --destination-env <key>', 'Destination environment')
     .option('-t, --api-token <token>', 'API token')
-    .option('-f, --flag <flag>', 'Only sync the given flag')
-    .option('-T, --tag <tags...>', 'Only sync flags with the given tag(s)')
+    .option('-f, --flag <flag>', 'Sync only the specified flag')
+    .option('-T, --tag <tags...>', 'Sync flags with the given tag(s). Only flags with all tags will sync.')
     .option('-o, --omit-segments', 'Omit segments when syncing', false)
     .option('-H, --host <host>', 'Hostname override', DEFAULT_HOST)
     .option('-v, --verbose', 'Enable verbose logging', false)
-    .option('--dry-run', 'Preview syncing changes', false)
-    .option('-D, --debug', 'Enables HTTP debugging', false)
+    .option('--dry-run', 'Preview changes', false)
+    .option('-D, --debug', 'Enable HTTP debugging', false)
     .parse(process.argv);
 
 if (require.main === module) {

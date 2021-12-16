@@ -213,7 +213,7 @@ const completionSpec: Fig.Spec = {
     },
     {
       name: ["--flag", "-f"],
-      description: "Only sync the given flag",
+      description: "Sync only the specified flag",
       icon: `fig://template?color=${LD_PURPLE_HEX}&badge=⚑`,
       dependsOn: ["-p"],
       args: {
@@ -225,7 +225,7 @@ const completionSpec: Fig.Spec = {
     {
       // No API for grabbing these, at the moment
       name: ["--tag", "-T"],
-      description: "Only sync flags with the given tag(s)",
+      description: "Sync flags with the specified tag(s). Only flags with all tags will sync.",
       icon: `fig://template?color=${LD_PINK_HEX}&badge=🏷`,
       args: {
         name: "string",
@@ -238,7 +238,7 @@ const completionSpec: Fig.Spec = {
     },
     {
       name: ["--dry-run"],
-      description: "Preview syncing changes",
+      description: "Preview changes",
     },
     hostOpt,
     {
@@ -247,7 +247,7 @@ const completionSpec: Fig.Spec = {
     },
     {
       name: ["--debug", "-D"],
-      description: "Enables HTTP debugging",
+      description: "Enable HTTP debugging",
     },
   ],
 };
