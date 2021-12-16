@@ -43,7 +43,7 @@ const getOptionIndexFromContext = (context, option: Fig.Option) => {
 
 // Generators that query the API
 const apiGenerators: Record<string, Fig.Generator> = {
-  listProjects: {
+  projects: {
     script: (context) => {
       const token = getOptionFromContext(context, tokenOpt);
       const host = getOptionFromContext(context, hostOpt) || DEFAULT_HOST;
@@ -65,7 +65,7 @@ const apiGenerators: Record<string, Fig.Generator> = {
       });
     },
   },
-  listEnvironments: {
+  environments: {
     script: (context) => {
       const token = getOptionFromContext(context, tokenOpt);
       const project = getOptionFromContext(context, projectOpt);
@@ -88,7 +88,7 @@ const apiGenerators: Record<string, Fig.Generator> = {
       });
     },
   },
-  listFlags: {
+  flags: {
     script: (context) => {
       const token = getOptionFromContext(context, tokenOpt);
       const project = getOptionFromContext(context, projectOpt);
@@ -114,7 +114,7 @@ const apiGenerators: Record<string, Fig.Generator> = {
       });
     },
   },
-  listFlagTags: {
+  flagTags: {
     script: (context) => {
       const token = getOptionFromContext(context, tokenOpt);
       const host = getOptionFromContext(context, hostOpt) || DEFAULT_HOST;
