@@ -21,6 +21,8 @@ const LD_PURPLE_HEX = 'A34FDE';
 const LD_PINK_HEX = 'FF386B';
 const LD_CYAN_HEX = '3DD6F5';
 
+const ICON_TAG = `fig://template?color=${LD_PINK_HEX}&badge=🏷`;
+
 const getOptionFromContext = (context, option: Fig.Option) => {
   const index = getOptionIndexFromContext(context, option);
   const value = index > -1 ? context[index+1] : '';
@@ -113,6 +115,29 @@ const flagGenerator: Fig.Generator = {
   },
 };
 
+// NOTE: API not fully released yet
+const tagGenerator: Fig.Generator = {
+  script(context) {
+    const token = getOptionFromContext(context, tokenOpt);
+    const host = getOptionFromContext(context, hostOpt) || DEFAULT_HOST;
+
+    return `curl -s -X GET \
+    ${host}/api/v2/tags?kind=flag \
+    -H 'Authorization: ${token}'`;
+  },
+  postProcess(out) {
+    const tags: string[] = JSON.parse(out).items;
+
+    return tags.map<Fig.Suggestion>((tag) => {
+      return {
+        name: tag,
+        icon: ICON_TAG,
+      };
+    });
+  },
+};
+
+
 const projectOpt: Fig.Option = {
   name: ["--project-key", "-p"],
   description: "Project key",
@@ -203,9 +228,12 @@ const completionSpec: Fig.Spec = {
       description: "Only sync flags with the given tag(s)",
       icon: `fig://template?color=${LD_PINK_HEX}&badge=🏷`,
       args: {
-        name: "tag",
+        name: "string",
+        description: "Tag name",
         isVariadic: true,
         optionsCanBreakVariadicArg: true,
+        debounce: true,
+        generators: tagGenerator,
       },
     },
     {
