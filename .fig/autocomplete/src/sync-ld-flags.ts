@@ -17,10 +17,13 @@ const DEFAULT_HOST = 'https://app.launchdarkly.com';
 
 // Brand colors
 const LD_BLUE_HEX = '405BFF';
-const LD_PURPLE_HEX = 'A34FDE';
-const LD_PINK_HEX = 'FF386B';
 const LD_CYAN_HEX = '3DD6F5';
+const LD_PINK_HEX = 'FF386B';
+const LD_PURPLE_HEX = 'A34FDE';
 
+const ICON_ENV = `fig://template?color=${LD_CYAN_HEX}&badge=E`;
+const ICON_FLAG = `fig://template?color=${LD_PURPLE_HEX}&badge=⚑`;
+const ICON_PROJECT = `fig://template?color=${LD_BLUE_HEX}&badge=P`;
 const ICON_TAG = `fig://template?color=${LD_PINK_HEX}&badge=🏷`;
 
 const getOptionFromContext = (context, option: Fig.Option) => {
@@ -60,7 +63,7 @@ const apiGenerators: Record<string, Fig.Generator> = {
           name: item.key,
           insertValue: item.key,
           description: item.name,
-          icon: `fig://template?color=${LD_BLUE_HEX}&badge=P`
+          icon: ICON_PROJECT,
         };
       });
     },
@@ -83,7 +86,7 @@ const apiGenerators: Record<string, Fig.Generator> = {
           name: item.key,
           insertValue: item.key,
           description: item.name,
-          icon: `fig://template?color=${item.color}&badge=E`
+          icon: `fig://template?color=${item.color}&badge=E`,
         };
       });
     },
@@ -109,7 +112,7 @@ const apiGenerators: Record<string, Fig.Generator> = {
           name: item.key,
           insertValue: item.key,
           description: `${item.name} - ${item.description}`,
-          icon: `fig://template?color=${LD_PURPLE_HEX}&badge=⚑`
+          icon: ICON_FLAG,
         };
       });
     },
@@ -142,7 +145,7 @@ const apiGenerators: Record<string, Fig.Generator> = {
 const projectOpt: Fig.Option = {
   name: ["-p", "--project-key"],
   description: "Project key",
-  icon: `fig://template?color=${LD_BLUE_HEX}&badge=P`,
+  icon: ICON_PROJECT,
   priority: 800,
   args: {
     name: "string",
@@ -177,7 +180,7 @@ const sourceOpt: Fig.Option = {
   name: ["-s", "--source-env"],
   description: "Source environment",
   dependsOn: ["-p"],
-  icon: `fig://template?color=${LD_CYAN_HEX}&badge=E`,
+  icon: ICON_ENV,
   priority: 700,
   args: {
     name: "string",
@@ -191,7 +194,7 @@ const destinationOpt: Fig.Option = {
   name: ["-d", "--destination-env"],
   description: "Destination environment",
   dependsOn: ["-p"],
-  icon: `fig://template?color=${LD_CYAN_HEX}&badge=E`,
+  icon: ICON_ENV,
   priority: 700,
   args: {
     name: "string",
@@ -220,8 +223,7 @@ const completionSpec: Fig.Spec = {
     {
       name: ["-f", "--flag"],
       description: "Sync only the specified flag",
-      icon: `fig://template?color=${LD_PURPLE_HEX}&badge=⚑`,
-      dependsOn: ["-p"],
+      icon: ICON_FLAG,
       args: {
         name: "string",
         description: "Flag key",
@@ -232,7 +234,7 @@ const completionSpec: Fig.Spec = {
     {
       name: ["-T", "--tag"],
       description: "Sync flags with the specified tag(s). Only flags with all tags will sync.",
-      icon: `fig://template?color=${LD_PINK_HEX}&badge=🏷`,
+      icon: ICON_TAG,
       args: {
         name: "string",
         description: "Tag name",
