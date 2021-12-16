@@ -167,7 +167,7 @@ const tokenOpt: Fig.Option = {
     name: "string",
     description: "API access token",
     generators: {
-      script: `cat example-config.json`,
+      script: `cat ~/.config/ldc.json`,
       postProcess: getSuggestionsFromConfig('apitoken', ICON_API_TOKEN),
     }
   },
@@ -182,7 +182,7 @@ const hostOpt: Fig.Option = {
     name: "URI",
     description: "LaunchDarkly URI",
     generators: {
-      script: `cat example-config.json`,
+      script: `cat ~/.config/ldc.json`,
       postProcess: getSuggestionsFromConfig('server', ICON_URI),
     }
   },
