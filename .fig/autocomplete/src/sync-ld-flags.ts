@@ -147,6 +147,7 @@ const projectOpt: Fig.Option = {
   name: ["-p", "--project-key"],
   description: "Project key",
   isRepeatable: false,
+  isRequired: true,
   icon: ICON_PROJECT,
   priority: 800,
   args: {
@@ -161,6 +162,7 @@ const tokenOpt: Fig.Option = {
   name: ["-t", "--api-token"],
   description: "LaunchDarkly personal access token with write-level access.",
   isRepeatable: false,
+  isRequired: true,
   icon: ICON_API_TOKEN,
   priority: 1000,
   args: {
@@ -207,6 +209,7 @@ const sourceOpt: Fig.Option = {
   description: "Source environment",
   dependsOn: ["-p"],
   isRepeatable: false,
+  isRequired: true,
   icon: ICON_ENV,
   priority: 700,
   args: {
@@ -222,6 +225,7 @@ const destinationOpt: Fig.Option = {
   description: "Destination environment",
   dependsOn: ["-p"],
   isRepeatable: false,
+  isRequired: true,
   icon: ICON_ENV,
   priority: 600,
   args: {
