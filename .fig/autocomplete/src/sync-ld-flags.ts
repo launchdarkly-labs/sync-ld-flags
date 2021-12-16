@@ -153,7 +153,7 @@ const projectOpt: Fig.Option = {
     name: "string",
     description: "Project key",
     debounce: true,
-    generators: apiGenerators.listProjects,
+    generators: apiGenerators.projects,
   },
 };
 
@@ -213,7 +213,7 @@ const sourceOpt: Fig.Option = {
     name: "string",
     description: "Environment key",
     debounce: true,
-    generators: apiGenerators.listEnvironments,
+    generators: apiGenerators.environments,
   },
 };
 
@@ -223,12 +223,12 @@ const destinationOpt: Fig.Option = {
   dependsOn: ["-p"],
   isRepeatable: false,
   icon: ICON_ENV,
-  priority: 700,
+  priority: 600,
   args: {
     name: "string",
     description: "Environment key",
     debounce: true,
-    generators: apiGenerators.listEnvironments,
+    generators: apiGenerators.environments,
   },
 };
 
@@ -259,7 +259,7 @@ const completionSpec: Fig.Spec = {
         name: "string",
         description: "Flag key",
         debounce: true,
-        generators: apiGenerators.listFlags,
+        generators: apiGenerators.flags,
       },
     },
     {
@@ -273,7 +273,7 @@ const completionSpec: Fig.Spec = {
         isVariadic: true,
         optionsCanBreakVariadicArg: true,
         debounce: true,
-        generators: apiGenerators.listFlagTags,
+        generators: apiGenerators.flagTags,
       },
     },
     {
