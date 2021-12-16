@@ -41,102 +41,103 @@ const getOptionIndexFromContext = (context, option: Fig.Option) => {
   return -1;
 }
 
-const projectGenerator: Fig.Generator = {
-  script(context) {
-    const token = getOptionFromContext(context, tokenOpt);
-    const host = getOptionFromContext(context, hostOpt) || DEFAULT_HOST;
-
-    return `curl -s -X GET \
-    ${host}/api/v2/projects \
-    -H 'Authorization: ${token}'`;
+// Generators that query the API
+const apiGenerators: Record<string, Fig.Generator> = {
+  listProjects: {
+    script: (context) => {
+      const token = getOptionFromContext(context, tokenOpt);
+      const host = getOptionFromContext(context, hostOpt) || DEFAULT_HOST;
+  
+      return `curl -s -X GET \
+      ${host}/api/v2/projects \
+      -H 'Authorization: ${token}'`;
+    },
+    postProcess: (out) => {
+      const projects: Project[] = JSON.parse(out).items;
+  
+      return projects.map<Fig.Suggestion>((item) => {
+        return {
+          name: item.key,
+          insertValue: item.key,
+          description: item.name,
+          icon: `fig://template?color=${LD_BLUE_HEX}&badge=P`
+        };
+      });
+    },
   },
-  postProcess(out) {
-    const projects: Project[] = JSON.parse(out).items;
+  listEnvironments: {
+    script: (context) => {
+      const token = getOptionFromContext(context, tokenOpt);
+      const project = getOptionFromContext(context, projectOpt);
+      const host = getOptionFromContext(context, hostOpt) || DEFAULT_HOST;
+      
+      return `curl -s -X GET \
+      ${host}/api/v2/projects/${project} \
+      -H 'Authorization: ${token}'`;
+    },
+    postProcess: (out) => {
+      const envs: Environment[] = JSON.parse(out).environments;
+  
+      return envs.map<Fig.Suggestion>((item) => {
+        return {
+          name: item.key,
+          insertValue: item.key,
+          description: item.name,
+          icon: `fig://template?color=${item.color}&badge=E`
+        };
+      });
+    },
+  },
+  listFlags: {
+    script: (context) => {
+      const token = getOptionFromContext(context, tokenOpt);
+      const project = getOptionFromContext(context, projectOpt);
+      const env = getOptionFromContext(context, sourceOpt) || getOptionFromContext(context, destinationOpt);
+      const host = getOptionFromContext(context, hostOpt) || DEFAULT_HOST;
+  
+      const params = env ? `env=${env}`: '';
+      
+      return `curl -s -X GET \
+      ${host}/api/v2/flags/${project}?${params} \
+      -H 'Authorization: ${token}'`;
+    },
+    postProcess: (out) => {
+      const flags: Flag[] = JSON.parse(out).items;
+  
+      return flags.map<Fig.Suggestion>((item) => {
+        return {
+          name: item.key,
+          insertValue: item.key,
+          description: `${item.name} - ${item.description}`,
+          icon: `fig://template?color=${LD_PURPLE_HEX}&badge=⚑`
+        };
+      });
+    },
+  },
+  listFlagTags: {
+    script: (context) => {
+      const token = getOptionFromContext(context, tokenOpt);
+      const host = getOptionFromContext(context, hostOpt) || DEFAULT_HOST;
 
-    return projects.map<Fig.Suggestion>((item) => {
-      return {
-        name: item.key,
-        insertValue: item.key,
-        description: item.name,
-        icon: `fig://template?color=${LD_BLUE_HEX}&badge=P`
-      };
-    });
+      // NOTE: API not fully released yet
+      // However, if it is NOT enabled for the given application
+      // it will just return no suggestions
+      return `curl -s -X GET \
+      ${host}/api/v2/tags?kind=flag \
+      -H 'Authorization: ${token}'`;
+    },
+    postProcess: (out) => {
+      const tags: string[] = JSON.parse(out).items;
+
+      return tags.map<Fig.Suggestion>((tag) => {
+        return {
+          name: tag,
+          icon: ICON_TAG,
+        };
+      });
+    },
   },
 };
-
-const environmentGenerator: Fig.Generator = {
-  script(context) {
-    const token = getOptionFromContext(context, tokenOpt);
-    const project = getOptionFromContext(context, projectOpt);
-    const host = getOptionFromContext(context, hostOpt) || DEFAULT_HOST;
-    
-    return `curl -s -X GET \
-    ${host}/api/v2/projects/${project} \
-    -H 'Authorization: ${token}'`;
-  },
-  postProcess(out) {
-    const envs: Environment[] = JSON.parse(out).environments;
-
-    return envs.map<Fig.Suggestion>((item) => {
-      return {
-        name: item.key,
-        insertValue: item.key,
-        description: item.name,
-        icon: `fig://template?color=${item.color}&badge=E`
-      };
-    });
-  },
-};
-
-const flagGenerator: Fig.Generator = {
-  script(context) {
-    const token = getOptionFromContext(context, tokenOpt);
-    const project = getOptionFromContext(context, projectOpt);
-    const env = getOptionFromContext(context, sourceOpt) || getOptionFromContext(context, destinationOpt);
-    const host = getOptionFromContext(context, hostOpt) || DEFAULT_HOST;
-
-    const params = env ? `env=${env}`: '';
-    
-    return `curl -s -X GET \
-    ${host}/api/v2/flags/${project}?${params} \
-    -H 'Authorization: ${token}'`;
-  },
-  postProcess(out) {
-    const flags: Flag[] = JSON.parse(out).items;
-
-    return flags.map<Fig.Suggestion>((item) => {
-      return {
-        name: item.key,
-        insertValue: item.key,
-        description: `${item.name} - ${item.description}`,
-        icon: `fig://template?color=${LD_PURPLE_HEX}&badge=⚑`
-      };
-    });
-  },
-};
-
-// NOTE: API not fully released yet
-const tagGenerator: Fig.Generator = {
-  script(context) {
-    const token = getOptionFromContext(context, tokenOpt);
-    const host = getOptionFromContext(context, hostOpt) || DEFAULT_HOST;
-
-    return `curl -s -X GET \
-    ${host}/api/v2/tags?kind=flag \
-    -H 'Authorization: ${token}'`;
-  },
-  postProcess(out) {
-    const tags: string[] = JSON.parse(out).items;
-
-    return tags.map<Fig.Suggestion>((tag) => {
-      return {
-        name: tag,
-        icon: ICON_TAG,
-      };
-    });
-  },
-};
-
 
 const projectOpt: Fig.Option = {
   name: ["--project-key", "-p"],
@@ -147,7 +148,7 @@ const projectOpt: Fig.Option = {
     name: "string",
     description: "Project key",
     debounce: true,
-    generators: projectGenerator,
+    generators: apiGenerators.listProjects,
   }
 };
 
@@ -182,7 +183,7 @@ const sourceOpt: Fig.Option = {
     name: "string",
     description: "Environment key",
     debounce: true,
-    generators: environmentGenerator,
+    generators: apiGenerators.listEnvironments,
   },
 };
 
@@ -196,7 +197,7 @@ const destinationOpt: Fig.Option = {
     name: "string",
     description: "Environment key",
     debounce: true,
-    generators: environmentGenerator,
+    generators: apiGenerators.listEnvironments,
   },
 };
 
@@ -225,7 +226,7 @@ const completionSpec: Fig.Spec = {
         name: "string",
         description: "Flag key",
         debounce: true,
-        generators: flagGenerator,
+        generators: apiGenerators.listFlags,
       },
     },
     {
@@ -239,7 +240,7 @@ const completionSpec: Fig.Spec = {
         isVariadic: true,
         optionsCanBreakVariadicArg: true,
         debounce: true,
-        generators: tagGenerator,
+        generators: apiGenerators.listFlagTags,
       },
     },
     {
