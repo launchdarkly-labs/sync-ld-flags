@@ -7,11 +7,13 @@ interface WithColor {
   color: string
 }
 
-interface Project extends BaseObject, WithColor {}
-interface Environment extends BaseObject, WithColor {}
-interface Flag extends BaseObject {
+interface WithDescription {
   description: string
 }
+
+interface Environment extends BaseObject, WithColor {}
+interface Flag extends BaseObject, WithDescription {}
+interface Project extends BaseObject {}
 
 const DEFAULT_HOST = 'https://app.launchdarkly.com';
 
