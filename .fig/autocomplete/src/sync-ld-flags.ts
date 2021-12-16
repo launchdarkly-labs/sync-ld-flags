@@ -45,6 +45,27 @@ const getOptionIndexFromContext = (context, option: Fig.Option) => {
   return -1;
 }
 
+const getSuggestionsFromConfig = (keyName, icon) => {
+  return (out) => {
+    const config = JSON.parse(out);
+
+    const suggestions: Fig.Suggestion[] = [];
+
+    for (const name in config) {
+      for (const key in config[name]) {
+        if (key.toLowerCase() === keyName) {
+          suggestions.push({
+            name: config[name][key],
+            description: name,
+            icon
+          });
+        }
+      }
+    }
+    return suggestions;
+  }
+};
+
 // Generators that query the API
 const apiGenerators: Record<string, Fig.Generator> = {
   projects: {
@@ -169,15 +190,8 @@ const tokenOpt: Fig.Option = {
     name: "string",
     description: "API access token",
     generators: {
-      script: `jq -r '.[] .apitoken//empty' ~/.config/ldc.json`,
-      postProcess: (out) => {
-        return out.split('\n').map<Fig.Suggestion>((token) => {
-          return {
-            name: token,
-            icon: ICON_API_TOKEN,
-          };
-        });
-      }
+      script: `cat ~/.config/ldc.json`,
+      postProcess: getSuggestionsFromConfig('apitoken', ICON_API_TOKEN),
     }
   },
 };
@@ -191,15 +205,8 @@ const hostOpt: Fig.Option = {
     name: "URI",
     description: "LaunchDarkly URI",
     generators: {
-      script: `jq -r '.[] .server//empty' ~/.config/ldc.json`,
-      postProcess: (out) => {
-        return out.split('\n').map<Fig.Suggestion>((uri) => {
-          return {
-            name: uri,
-            icon: ICON_URI,
-          };
-        });
-      }
+      script: `cat ~/.config/ldc.json`,
+      postProcess: getSuggestionsFromConfig('server', ICON_URI),
     }
   },
 };
