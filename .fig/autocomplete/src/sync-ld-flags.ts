@@ -230,7 +230,6 @@ const completionSpec: Fig.Spec = {
       },
     },
     {
-      // No API for grabbing these, at the moment
       name: ["--tag", "-T"],
       description: "Sync flags with the specified tag(s). Only flags with all tags will sync.",
       icon: `fig://template?color=${LD_PINK_HEX}&badge=🏷`,
