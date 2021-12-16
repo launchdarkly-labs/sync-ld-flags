@@ -18,13 +18,14 @@ const DEFAULT_HOST = 'https://app.launchdarkly.com';
 // Brand colors
 const LD_BLUE_HEX = '405BFF';
 const LD_CYAN_HEX = '3DD6F5';
-const LD_PINK_HEX = 'FF386B';
 const LD_PURPLE_HEX = 'A34FDE';
 
+const ICON_API_TOKEN = `fig://template?badge=🔑`;
 const ICON_ENV = `fig://template?color=${LD_CYAN_HEX}&badge=E`;
 const ICON_FLAG = `fig://template?color=${LD_PURPLE_HEX}&badge=⚑`;
 const ICON_PROJECT = `fig://template?color=${LD_BLUE_HEX}&badge=P`;
-const ICON_TAG = `fig://template?color=${LD_PINK_HEX}&badge=🏷`;
+const ICON_TAG = `fig://template?badge=🏷`;
+const ICON_URI = "fig://template?badge=🌐";
 
 const getOptionFromContext = (context, option: Fig.Option) => {
   const index = getOptionIndexFromContext(context, option);
@@ -160,11 +161,22 @@ const tokenOpt: Fig.Option = {
   name: ["-t", "--api-token"],
   description: "LaunchDarkly personal access token with write-level access.",
   isRepeatable: false,
-  icon: `fig://icon?type=asterisk`,
-  priority: 900,
+  icon: ICON_API_TOKEN,
+  priority: 1000,
   args: {
     name: "string",
     description: "API access token",
+    generators: {
+      script: `jq -r '.[] .apitoken//empty' ~/.config/ldc.json`,
+      postProcess: (out) => {
+        return out.split('\n').map<Fig.Suggestion>((token) => {
+          return {
+            name: token,
+            icon: ICON_API_TOKEN,
+          };
+        });
+      }
+    }
   },
 };
 
@@ -172,10 +184,21 @@ const hostOpt: Fig.Option = {
   name: ["-H", "--host"],
   description: "Hostname override",
   isRepeatable: false,
-  icon: "fig://template?color=${}badge=🌐",
+  icon: ICON_URI,
   args: {
     name: "URI",
     description: "LaunchDarkly URI",
+    generators: {
+      script: `jq -r '.[] .server//empty' ~/.config/ldc.json`,
+      postProcess: (out) => {
+        return out.split('\n').map<Fig.Suggestion>((uri) => {
+          return {
+            name: uri,
+            icon: ICON_URI,
+          };
+        });
+      }
+    }
   },
 };
 
