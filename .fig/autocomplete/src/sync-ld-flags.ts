@@ -152,7 +152,7 @@ const projectOpt: Fig.Option = {
     description: "Project key",
     debounce: true,
     generators: apiGenerators.listProjects,
-  }
+  },
 };
 
 const tokenOpt: Fig.Option = {
@@ -162,8 +162,8 @@ const tokenOpt: Fig.Option = {
   priority: 900,
   args: {
     name: "string",
-    description: "API access token"
-  }
+    description: "API access token",
+  },
 };
 
 const hostOpt: Fig.Option = {
@@ -172,7 +172,7 @@ const hostOpt: Fig.Option = {
   icon: "fig://template?color=${}badge=🌐",
   args: {
     name: "URI",
-    description: "LaunchDarkly URI"
+    description: "LaunchDarkly URI",
   },
 };
 
@@ -224,6 +224,7 @@ const completionSpec: Fig.Spec = {
       name: ["-f", "--flag"],
       description: "Sync only the specified flag",
       icon: ICON_FLAG,
+      exclusiveOn: ["-T", "--tag"],
       args: {
         name: "string",
         description: "Flag key",
@@ -235,6 +236,7 @@ const completionSpec: Fig.Spec = {
       name: ["-T", "--tag"],
       description: "Sync flags with the specified tag(s). Only flags with all tags will sync.",
       icon: ICON_TAG,
+      exclusiveOn: ["-f", "--flag"],
       args: {
         name: "string",
         description: "Tag name",
