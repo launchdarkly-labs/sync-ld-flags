@@ -139,29 +139,6 @@ const apiGenerators: Record<string, Fig.Generator> = {
       });
     },
   },
-  flagTags: {
-    script: (context) => {
-      const token = getOptionFromContext(context, tokenOpt);
-      const host = getOptionFromContext(context, hostOpt) || DEFAULT_HOST;
-
-      // NOTE: API not fully released yet
-      // However, if it is NOT enabled for the given application
-      // it will just return no suggestions
-      return `curl -s -X GET \
-      ${host}/api/v2/tags?kind=flag \
-      -H 'Authorization: ${token}'`;
-    },
-    postProcess: (out) => {
-      const tags: string[] = JSON.parse(out).items;
-
-      return tags.map<Fig.Suggestion>((tag) => {
-        return {
-          name: tag,
-          icon: ICON_TAG,
-        };
-      });
-    },
-  },
 };
 
 const projectOpt: Fig.Option = {
@@ -190,7 +167,7 @@ const tokenOpt: Fig.Option = {
     name: "string",
     description: "API access token",
     generators: {
-      script: `cat ~/.config/ldc.json`,
+      script: `cat example-config.json`,
       postProcess: getSuggestionsFromConfig('apitoken', ICON_API_TOKEN),
     }
   },
@@ -205,7 +182,7 @@ const hostOpt: Fig.Option = {
     name: "URI",
     description: "LaunchDarkly URI",
     generators: {
-      script: `cat ~/.config/ldc.json`,
+      script: `cat example-config.json`,
       postProcess: getSuggestionsFromConfig('server', ICON_URI),
     }
   },
@@ -281,10 +258,6 @@ const completionSpec: Fig.Spec = {
       args: {
         name: "string",
         description: "Tag name",
-        isVariadic: true,
-        optionsCanBreakVariadicArg: true,
-        debounce: true,
-        generators: apiGenerators.flagTags,
       },
     },
     {
