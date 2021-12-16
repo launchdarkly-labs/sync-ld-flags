@@ -144,7 +144,8 @@ const projectOpt: Fig.Option = {
   icon: `fig://template?color=${LD_BLUE_HEX}&badge=P`,
   priority: 800,
   args: {
-    name: "project-key",
+    name: "string",
+    description: "Project key",
     debounce: true,
     generators: projectGenerator,
   }
@@ -156,7 +157,8 @@ const tokenOpt: Fig.Option = {
   icon: `fig://icon?type=asterisk`,
   priority: 900,
   args: {
-    name: "api-token"
+    name: "string",
+    description: "API token"
   }
 };
 
@@ -165,7 +167,8 @@ const hostOpt: Fig.Option = {
   description: "Hostname override",
   icon: "fig://template?color=${}badge=🌐",
   args: {
-    name: "host",
+    name: "URI",
+    description: "LaunchDarkly URI"
   },
 };
 
@@ -176,7 +179,8 @@ const sourceOpt: Fig.Option = {
   icon: `fig://template?color=${LD_CYAN_HEX}&badge=E`,
   priority: 700,
   args: {
-    name: "source-env",
+    name: "string",
+    description: "Environment key",
     debounce: true,
     generators: environmentGenerator,
   },
@@ -189,7 +193,8 @@ const destinationOpt: Fig.Option = {
   icon: `fig://template?color=${LD_CYAN_HEX}&badge=E`,
   priority: 700,
   args: {
-    name: "source-env",
+    name: "string",
+    description: "Environment key",
     debounce: true,
     generators: environmentGenerator,
   },
@@ -217,7 +222,8 @@ const completionSpec: Fig.Spec = {
       icon: `fig://template?color=${LD_PURPLE_HEX}&badge=⚑`,
       dependsOn: ["-p"],
       args: {
-        name: "flag",
+        name: "string",
+        description: "Flag key",
         debounce: true,
         generators: flagGenerator,
       },
