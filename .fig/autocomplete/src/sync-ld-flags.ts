@@ -282,7 +282,6 @@ const completionSpec: Fig.Spec = {
         name: "string",
         description: "Tag name",
         isVariadic: true,
-        optionsCanBreakVariadicArg: true,
         debounce: true,
         generators: apiGenerators.flagTags,
       },
