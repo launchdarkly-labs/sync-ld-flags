@@ -62,8 +62,8 @@ Options:
 
 ```
   -p, --project-key <key>      Project key
-  -s, --source-env <key>       Source environment
-  -d, --destination-env <key>  Destination environment
+  -s, --source-env <key>       Source environment key
+  -d, --destination-env <key>  Destination environment key
   -t, --api-token <token>      LaunchDarkly personal access token with
                                write-level access.
   -f, --flag <flag>            Sync only the specified flag
