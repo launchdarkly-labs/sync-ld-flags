@@ -7,7 +7,7 @@ const jsonpatch = require('fast-json-patch');
 const request = require('request');
 const program = require('commander');
 
-// Use to calculcate changing flags
+// Use to calculate changing flags
 let flagsWithChanges = 0;
 let flagsWithoutChanges = 0;
 
