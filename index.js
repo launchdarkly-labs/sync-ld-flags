@@ -32,13 +32,13 @@ function patchFlag(patch, key, config, cb) {
 
 const fetchFlags = function (config, cb) {
   const { baseUrl, projectKey, sourceEnvironment, destinationEnvironment, apiToken, tags, flag } = config;
-  let isSingle = flag ? true : false;
+  let isSingle = !!flag;
   let url = isSingle
     ? `${baseUrl}/flags/${projectKey}/${flag}?summary=0&env=${sourceEnvironment}&env=${destinationEnvironment}`
     : `${baseUrl}/flags/${projectKey}?summary=0&env=${sourceEnvironment}&env=${destinationEnvironment}${tags ? ("&filter=tags:" + tags.join('+')) : '' }`;
 
   const requestOptions = {
-    url: url,
+    url,
     headers: {
       'Authorization': apiToken,
       'Content-Type': 'application/json'
