@@ -62,12 +62,16 @@ const fetchFlags = function (config, cb) {
       const parsed = JSON.parse(body);
       return cb(null, isSingle ? [parsed] : parsed.items);
     }
+
+    if (response.statusCode === 404) {
+      return cb({message: `Unknown flag key: ${flag}`})
+    }
     
     try {
       const parsed = JSON.parse(body);
       return cb(parsed);
-    } catch(err) {
-      cb(err)
+    } catch (err) {
+      cb({message: "Unknown error", response: response.toJSON()})
     }
   }
 
@@ -174,7 +178,7 @@ async function syncEnvironment(config = {}) {
     if (err) {
       const message = err.message || '';
       const matches = message.match(/^Unknown environment key: (?<envKey>.+)$/);
-      if (matches.groups && matches.groups.envKey) {
+      if (matches && matches.groups && matches.groups.envKey) {
         const envKey = matches.groups.envKey;
         console.error(`Invalid ${config.sourceEnv === envKey ? "source" : "destination"} environment "${envKey}". Did you specify the right project?`);
       } else {
@@ -206,7 +210,7 @@ program
     .option('-o, --omit-segments', 'Omit segments when syncing', false)
     .option('-H, --host <host>', 'Hostname override', DEFAULT_HOST)
     .option('-v, --verbose', 'Enable verbose logging', false)
-    .option('-n', '--dry-run', 'Preview changes', false)
+    .option('-n, --dry-run', 'Preview changes', false)
     .option('-D, --debug', 'Enable HTTP debugging', false)
     .parse(process.argv);
 
