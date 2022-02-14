@@ -206,7 +206,7 @@ program
     .option('-o, --omit-segments', 'Omit segments when syncing', false)
     .option('-H, --host <host>', 'Hostname override', DEFAULT_HOST)
     .option('-v, --verbose', 'Enable verbose logging', false)
-    .option('--dry-run', 'Preview changes', false)
+    .option('-n', '--dry-run', 'Preview changes', false)
     .option('-D, --debug', 'Enable HTTP debugging', false)
     .parse(process.argv);
 
