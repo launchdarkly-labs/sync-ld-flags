@@ -3,7 +3,7 @@
 
 const DEFAULT_HOST = 'https://app.launchdarkly.com';
 
-const jsonpatch = require('fast-json-patch');
+const jsonPatch = require('fast-json-patch');
 const request = require('request');
 const program = require('commander');
 
@@ -143,13 +143,13 @@ async function syncFlag(flag, config = {}) {
     // Remove segments because segments are not guaranteed to exist across environments
     stripSegments(flag);
   }
-  const observer = jsonpatch.observe(flag);
+  const observer = jsonPatch.observe(flag);
 
   if (verbose) console.log(`Checking ${flag.key}`);
 
   copyValues(flag, config);
 
-  const diff = jsonpatch.generate(observer);
+  const diff = jsonPatch.generate(observer);
 
   if (diff.length > 0) {
     flagsWithChanges += 1;
