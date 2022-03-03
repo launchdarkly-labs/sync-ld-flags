@@ -1,13 +1,10 @@
-#!/usr/bin/env node
-'use strict';
-
 const DEFAULT_HOST = 'https://app.launchdarkly.com';
 
-const jsonpatch = require('fast-json-patch');
+const jsonPatch = require('fast-json-patch');
 const request = require('request');
 const program = require('commander');
 
-// Use to calculcate changing flags
+// Use to calculate changing flags
 let flagsWithChanges = 0;
 let flagsWithoutChanges = 0;
 
@@ -17,49 +14,61 @@ function patchFlag(patch, key, config, cb) {
     url: `${baseUrl}/flags/${projectKey}/${key}`,
     body: patch,
     headers: {
-      'Authorization': apiToken,
-      'Content-Type': 'application/json'
-    }
+      Authorization: apiToken,
+      'Content-Type': 'application/json',
+    },
   };
 
-  return new Promise(function(resolve, reject) {
-    request.patch(requestOptions, function(error, response, body) {
-      cb(error, response, body)
-      resolve(true)
+  return new Promise(function (resolve) {
+    request.patch(requestOptions, function (error, response, body) {
+      cb(error, response, body);
+      resolve(true);
     });
   });
 }
 
 const fetchFlags = function (config, cb) {
   const { baseUrl, projectKey, sourceEnvironment, destinationEnvironment, apiToken, tags, flag } = config;
-  let isSingle = flag ? true : false;
-  let url = isSingle
-    ? `${baseUrl}/flags/${projectKey}/${flag}?summary=0&env=${sourceEnvironment}&env=${destinationEnvironment}`
-    : `${baseUrl}/flags/${projectKey}?summary=0&env=${sourceEnvironment}&env=${destinationEnvironment}${tags ? ("&filter=tags:" + tags.join('+')) : '' }`;
+  let isSingle = flag && !tags;
+  let url = `${baseUrl}/flags/${projectKey}`;
+
+  if (isSingle) {
+    url += `/${flag}`;
+  }
+
+  url += `?summary=0&env=${sourceEnvironment}&env=${destinationEnvironment}`;
+
+  if (tags) {
+    url += '&filter=tags:' + tags.join('+');
+  }
 
   const requestOptions = {
-    url: url,
+    url,
     headers: {
-      'Authorization': apiToken,
-      'Content-Type': 'application/json'
-    }
+      Authorization: apiToken,
+      'Content-Type': 'application/json',
+    },
   };
 
   function callback(error, response, body) {
     if (error) {
       return cb(error);
     }
-    
+
     if (response.statusCode === 200) {
       const parsed = JSON.parse(body);
       return cb(null, isSingle ? [parsed] : parsed.items);
     }
-    
+
+    if (response.statusCode === 404) {
+      return cb({ message: `Unknown flag key: ${flag}` });
+    }
+
     try {
       const parsed = JSON.parse(body);
       return cb(parsed);
-    } catch(err) {
-      cb(err)
+    } catch (err) {
+      cb({ message: 'Unknown error', response: response.toJSON() });
     }
   }
 
@@ -68,15 +77,7 @@ const fetchFlags = function (config, cb) {
 
 const copyValues = function (flag, config) {
   const { destinationEnvironment, sourceEnvironment } = config;
-  const attributes = [
-    'on',
-    'archived',
-    'targets',
-    'rules',
-    'prerequisites',
-    'fallthrough',
-    'offVariation'
-  ];
+  const attributes = ['on', 'archived', 'targets', 'rules', 'prerequisites', 'fallthrough', 'offVariation'];
   attributes.forEach(function (attr) {
     flag.environments[destinationEnvironment][attr] = flag.environments[sourceEnvironment][attr];
   });
@@ -84,7 +85,7 @@ const copyValues = function (flag, config) {
 
 const stripRuleAndClauseIds = function (flag) {
   for (let env in flag.environments) {
-    if (!flag.environments.hasOwnProperty(env)) continue;
+    if (!flag.environments.env) continue;
 
     for (let rule of flag.environments[env].rules) {
       delete rule._id;
@@ -98,7 +99,7 @@ const stripRuleAndClauseIds = function (flag) {
 
 const stripSegments = function (flag) {
   for (let env in flag.environments) {
-    if (!flag.environments.hasOwnProperty(env)) continue;
+    if (!flag.environments.env) continue;
 
     for (let i = 0; i < flag.environments[env].rules.length; i++) {
       const rule = flag.environments[env].rules[i];
@@ -111,7 +112,7 @@ const stripSegments = function (flag) {
         }
       }
       // filter out any empty items in the clause array (clauses we deleted above)
-      flag.environments[env].rules[i].clauses = flag.environments[env].rules[i].clauses.filter(c => !!c);
+      flag.environments[env].rules[i].clauses = flag.environments[env].rules[i].clauses.filter((c) => !!c);
 
       // remove any rules that don't have any clauses (because we removed the only clause(s) above)
       if (!flag.environments[env].rules[i].clauses.length) {
@@ -119,7 +120,7 @@ const stripSegments = function (flag) {
       }
     }
     // filter out any empty items in the rules array (rules we deleted above)
-    flag.environments[env].rules = flag.environments[env].rules.filter(r => !!r);
+    flag.environments[env].rules = flag.environments[env].rules.filter((r) => !!r);
   }
 };
 
@@ -131,13 +132,13 @@ async function syncFlag(flag, config = {}) {
     // Remove segments because segments are not guaranteed to exist across environments
     stripSegments(flag);
   }
-  const observer = jsonpatch.observe(flag);
+  const observer = jsonPatch.observe(flag);
 
   if (verbose) console.log(`Checking ${flag.key}`);
 
   copyValues(flag, config);
 
-  const diff = jsonpatch.generate(observer);
+  const diff = jsonPatch.generate(observer);
 
   if (diff.length > 0) {
     flagsWithChanges += 1;
@@ -152,12 +153,12 @@ async function syncFlag(flag, config = {}) {
         throw new Error(error);
       }
       if (response.statusCode >= 400) {
-        console.error(`PATCH failed (${response.statusCode}) for flag ${flag.key}:\n`, body)
+        console.error(`PATCH failed (${response.statusCode}) for flag ${flag.key}:\n`, body);
       }
     });
   } else {
     flagsWithoutChanges += 1;
-    if (verbose) console.log(`No changes in ${flag.key}`)
+    if (verbose) console.log(`No changes in ${flag.key}`);
   }
 }
 
@@ -166,14 +167,18 @@ async function syncEnvironment(config = {}) {
     if (err) {
       const message = err.message || '';
       const matches = message.match(/^Unknown environment key: (?<envKey>.+)$/);
-      if (matches.groups && matches.groups.envKey) {
+      if (matches && matches.groups && matches.groups.envKey) {
         const envKey = matches.groups.envKey;
-        console.error(`Invalid ${config.sourceEnv === envKey ? "source" : "destination"} environment "${envKey}". Did you specify the right project?`);
+        console.error(
+          `Invalid ${
+            config.sourceEnv === envKey ? 'source' : 'destination'
+          } environment "${envKey}". Did you specify the right project?`,
+        );
       } else {
         console.error('Error fetching flags\n', err);
       }
 
-      process.exit(1)
+      process.exit(1);
     }
 
     for (const flag of flags) {
@@ -182,25 +187,25 @@ async function syncEnvironment(config = {}) {
 
     const modifiedMessage = config.dryRun ? 'To be modified' : 'Modified';
 
-    console.log(`${modifiedMessage}: ${flagsWithChanges}, No changes required: ${flagsWithoutChanges}`)
+    console.log(`${modifiedMessage}: ${flagsWithChanges}, No changes required: ${flagsWithoutChanges}`);
   });
 }
 
 program
-    .name('./sync-ld-flags')
-    .description('Copy flag settings from one environment to another.')
-    .option('-p, --project-key <key>', 'Project key')
-    .option('-s, --source-env <key>', 'Source environment')
-    .option('-d, --destination-env <key>', 'Destination environment')
-    .option('-t, --api-token <token>', 'LaunchDarkly personal access token with write-level access.')
-    .option('-f, --flag <flag>', 'Sync only the specified flag')
-    .option('-T, --tag <tags...>', 'Sync flags with the given tag(s). Only flags with all tags will sync.')
-    .option('-o, --omit-segments', 'Omit segments when syncing', false)
-    .option('-H, --host <host>', 'Hostname override', DEFAULT_HOST)
-    .option('-v, --verbose', 'Enable verbose logging', false)
-    .option('--dry-run', 'Preview changes', false)
-    .option('-D, --debug', 'Enable HTTP debugging', false)
-    .parse(process.argv);
+  .name('./sync-ld-flags')
+  .description('Copy flag settings from one environment to another.')
+  .option('-p, --project-key <key>', 'Project key')
+  .option('-s, --source-env <key>', 'Source environment key')
+  .option('-d, --destination-env <key>', 'Destination environment key')
+  .option('-t, --api-token <token>', 'LaunchDarkly personal access token with write-level access.')
+  .option('-f, --flag <flag>', 'Sync only the specified flag')
+  .option('-T, --tag <tags...>', 'Sync flags with the given tag(s). Only flags with all tags will sync.')
+  .option('-o, --omit-segments', 'Omit segments when syncing', false)
+  .option('-H, --host <host>', 'Hostname override', DEFAULT_HOST)
+  .option('-v, --verbose', 'Enable verbose logging', false)
+  .option('-n, --dry-run', 'Preview changes', false)
+  .option('-D, --debug', 'Enable HTTP debugging', false)
+  .parse(process.argv);
 
 if (require.main === module) {
   const options = program.opts();
@@ -220,7 +225,7 @@ if (require.main === module) {
 
   if (options.debug) {
     // see https://github.com/request/request#debugging
-    require('request').debug = true
+    require('request').debug = true;
   }
 
   if (!config.projectKey) {

@@ -1,24 +1,26 @@
 interface BaseObject {
-  name: string,
-  key: string
+  name: string;
+  key: string;
 }
 
 interface WithColor {
-  color: string
+  color: string;
 }
 
-interface Project extends BaseObject, WithColor {}
+interface WithDescription {
+  description: string;
+}
+
 interface Environment extends BaseObject, WithColor {}
-interface Flag extends BaseObject {
-  description: string
-}
+interface Flag extends BaseObject, WithDescription {}
+type Project = BaseObject;
 
-const DEFAULT_HOST = 'https://app.launchdarkly.com';
+const DEFAULT_HOST = "https://app.launchdarkly.com";
 
 // Brand colors
-const LD_BLUE_HEX = '405BFF';
-const LD_CYAN_HEX = '3DD6F5';
-const LD_PURPLE_HEX = 'A34FDE';
+const LD_BLUE_HEX = "405BFF";
+const LD_CYAN_HEX = "3DD6F5";
+const LD_PURPLE_HEX = "A34FDE";
 
 const ICON_API_TOKEN = `fig://template?badge=🔑`;
 const ICON_ENV = `fig://template?color=${LD_CYAN_HEX}&badge=E`;
@@ -29,10 +31,10 @@ const ICON_URI = "fig://template?badge=🌐";
 
 const getOptionFromContext = (context, option: Fig.Option) => {
   const index = getOptionIndexFromContext(context, option);
-  const value = index > -1 ? context[index+1] : '';
+  const value = index > -1 ? context[index + 1] : "";
 
   return value;
-}
+};
 
 const getOptionIndexFromContext = (context, option: Fig.Option) => {
   for (const name of option.name) {
@@ -43,7 +45,7 @@ const getOptionIndexFromContext = (context, option: Fig.Option) => {
   }
 
   return -1;
-}
+};
 
 const getSuggestionsFromConfig = (keyName, icon) => {
   return (out) => {
@@ -57,13 +59,13 @@ const getSuggestionsFromConfig = (keyName, icon) => {
           suggestions.push({
             name: config[name][key],
             description: name,
-            icon
+            icon,
           });
         }
       }
     }
     return suggestions;
-  }
+  };
 };
 
 // Generators that query the API
@@ -72,14 +74,14 @@ const apiGenerators: Record<string, Fig.Generator> = {
     script: (context) => {
       const token = getOptionFromContext(context, tokenOpt);
       const host = getOptionFromContext(context, hostOpt) || DEFAULT_HOST;
-  
+
       return `curl -s -X GET \
       ${host}/api/v2/projects \
       -H 'Authorization: ${token}'`;
     },
     postProcess: (out) => {
       const projects: Project[] = JSON.parse(out).items;
-  
+
       return projects.map<Fig.Suggestion>((item) => {
         return {
           name: item.key,
@@ -95,14 +97,14 @@ const apiGenerators: Record<string, Fig.Generator> = {
       const token = getOptionFromContext(context, tokenOpt);
       const project = getOptionFromContext(context, projectOpt);
       const host = getOptionFromContext(context, hostOpt) || DEFAULT_HOST;
-      
+
       return `curl -s -X GET \
       ${host}/api/v2/projects/${project} \
       -H 'Authorization: ${token}'`;
     },
     postProcess: (out) => {
       const envs: Environment[] = JSON.parse(out).environments;
-  
+
       return envs.map<Fig.Suggestion>((item) => {
         return {
           name: item.key,
@@ -117,18 +119,20 @@ const apiGenerators: Record<string, Fig.Generator> = {
     script: (context) => {
       const token = getOptionFromContext(context, tokenOpt);
       const project = getOptionFromContext(context, projectOpt);
-      const env = getOptionFromContext(context, sourceOpt) || getOptionFromContext(context, destinationOpt);
+      const env =
+        getOptionFromContext(context, sourceOpt) ||
+        getOptionFromContext(context, destinationOpt);
       const host = getOptionFromContext(context, hostOpt) || DEFAULT_HOST;
-  
-      const params = env ? `env=${env}`: '';
-      
+
+      const params = env ? `env=${env}` : "";
+
       return `curl -s -X GET \
       ${host}/api/v2/flags/${project}?${params} \
       -H 'Authorization: ${token}'`;
     },
     postProcess: (out) => {
       const flags: Flag[] = JSON.parse(out).items;
-  
+
       return flags.map<Fig.Suggestion>((item) => {
         return {
           name: item.key,
@@ -181,7 +185,7 @@ const projectOpt: Fig.Option = {
 
 const tokenOpt: Fig.Option = {
   name: ["-t", "--api-token"],
-  description: "LaunchDarkly personal access token with write-level access.",
+  description: "LaunchDarkly personal access token with write-level access",
   isRepeatable: false,
   isRequired: true,
   icon: ICON_API_TOKEN,
@@ -191,8 +195,8 @@ const tokenOpt: Fig.Option = {
     description: "API access token",
     generators: {
       script: `cat ~/.config/ldc.json`,
-      postProcess: getSuggestionsFromConfig('apitoken', ICON_API_TOKEN),
-    }
+      postProcess: getSuggestionsFromConfig("apitoken", ICON_API_TOKEN),
+    },
   },
 };
 
@@ -206,8 +210,8 @@ const hostOpt: Fig.Option = {
     description: "LaunchDarkly URI",
     generators: {
       script: `cat ~/.config/ldc.json`,
-      postProcess: getSuggestionsFromConfig('server', ICON_URI),
-    }
+      postProcess: getSuggestionsFromConfig("server", ICON_URI),
+    },
   },
 };
 
@@ -245,7 +249,7 @@ const destinationOpt: Fig.Option = {
 
 const completionSpec: Fig.Spec = {
   name: "sync-ld-flags",
-  description: "Copy flag settings from one environment to another.",
+  description: "Copy flag settings from one environment to another",
   options: [
     {
       name: ["-h", "--help"],
@@ -275,7 +279,8 @@ const completionSpec: Fig.Spec = {
     },
     {
       name: ["-T", "--tag"],
-      description: "Sync flags with the specified tag(s). Only flags with all tags will sync.",
+      description:
+        "Sync flags with the specified tag(s). Only flags with all tags will sync",
       icon: ICON_TAG,
       exclusiveOn: ["-f", "--flag"],
       args: {
@@ -287,7 +292,7 @@ const completionSpec: Fig.Spec = {
       },
     },
     {
-      name: ["--dry-run"],
+      name: ["-n", "--dry-run"],
       description: "Preview changes",
       isRepeatable: false,
     },

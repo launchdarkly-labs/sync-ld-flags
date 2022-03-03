@@ -62,8 +62,8 @@ Options:
 
 ```
   -p, --project-key <key>      Project key
-  -s, --source-env <key>       Source environment
-  -d, --destination-env <key>  Destination environment
+  -s, --source-env <key>       Source environment key
+  -d, --destination-env <key>  Destination environment key
   -t, --api-token <token>      LaunchDarkly personal access token with
                                write-level access.
   -f, --flag <flag>            Sync only the specified flag
@@ -82,15 +82,13 @@ Options:
 
 This project supports [Fig](https://fig.io/) autocomplete!
 
-Add `--api-token` and (optionally) `--host` at the beginning of your commands and Fig will provide suggestions for your project and environment keys.
+Add `--api-token` and (optionally) `--host` at the beginning of your commands and Fig provides suggestions for your project and environment keys.
 
 Want to set these configuration variables more easily?
 
-![Auto-complete configuration](docs/images/autocomplete-config.gif)
+![Autocomplete configuration.](docs/images/autocomplete-config.gif)
 
-Auto-complete keys and servers by using a config file:
-
-Add the following configuration to `~/.config/ldc.json`
+You can autocomplete keys and servers by using a config file. Add the following configuration to `~/.config/ldc.json`:
 
 ```json
 {
