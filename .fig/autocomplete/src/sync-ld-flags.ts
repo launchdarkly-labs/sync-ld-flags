@@ -148,9 +148,6 @@ const apiGenerators: Record<string, Fig.Generator> = {
       const token = getOptionFromContext(context, tokenOpt);
       const host = getOptionFromContext(context, hostOpt) || DEFAULT_HOST;
 
-      // NOTE: API not fully released yet
-      // However, if it is NOT enabled for the given application
-      // it will just return no suggestions
       return `curl -s -X GET \
       ${host}/api/v2/tags?kind=flag \
       -H 'Authorization: ${token}'`;
