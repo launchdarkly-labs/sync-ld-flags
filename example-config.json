@@ -1,0 +1,6 @@
+{
+    "<REPLACE WITH NAME>": {
+        "apitoken": "<REPLACE WITH PERSONAL ACCESS TOKEN>",
+        "server": "<REMOVE OR REPLACE WITH APP URI>"
+    }
+}
