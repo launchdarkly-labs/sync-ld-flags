@@ -143,6 +143,26 @@ const apiGenerators: Record<string, Fig.Generator> = {
       });
     },
   },
+  flagTags: {
+    script: (context) => {
+      const token = getOptionFromContext(context, tokenOpt);
+      const host = getOptionFromContext(context, hostOpt) || DEFAULT_HOST;
+
+      return `curl -s -X GET \
+      ${host}/api/v2/tags?kind=flag \
+      -H 'Authorization: ${token}'`;
+    },
+    postProcess: (out) => {
+      const tags: string[] = JSON.parse(out).items;
+
+      return tags.map<Fig.Suggestion>((tag) => {
+        return {
+          name: tag,
+          icon: ICON_TAG,
+        };
+      });
+    },
+  },
 };
 
 const projectOpt: Fig.Option = {
@@ -263,6 +283,9 @@ const completionSpec: Fig.Spec = {
       args: {
         name: "string",
         description: "Tag name",
+        isVariadic: true,
+        debounce: true,
+        generators: apiGenerators.flagTags,
       },
     },
     {
