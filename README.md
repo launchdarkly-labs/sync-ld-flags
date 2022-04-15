@@ -1,23 +1,20 @@
-> This script is unsupported. 
+> This script is not officially supported by LaunchDarkly.
 >
-> To sync individual flags, please use the in-application Compare and Copy functionality instead:
-> https://launchdarkly.com/blog/launched-compare-and-copy-flag-settings-across-environments/
+> To sync individual flags, use the in-application [compare and copy](https://docs.launchdarkly.com/home/code/flag-compare-copy#comparing-and-copying-flag-settings-between-two-environments) functionality instead.
 
 # LaunchDarkly Environment Synchronizer
 
-This Node script simplifies the task of synchronizing flag rollout rules between two different environments. 
-It assumes that both environments are in the same project and account, and takes as input the API keys for 
-the two environments you're syncing.
+This Node script simplifies the task of synchronizing flag rollout rules between two different environments. It assumes that both environments are in the same project and account, and takes as input the API keys for the two environments you're syncing.
 
-The following properties will be synchronized:
+The following properties of each flag are synchronized:
 
-* If the evaluation rules are enabled
-* The archived bit
-* User target rules
-* Attribute targeting rules
-  * To omit clauses that reference segments, which are not necessarily shared between environments, use the `--omit-segments` flag
-* Prerequisites
-* Fallthrough rule
+* Whether the flag is toggled **On** or **Off**, that is, whether the evaluation rules are enabled
+* [Prerequisites](https://docs.launchdarkly.com/home/flags/prerequisites)
+* [Individual user targeting rules](https://docs.launchdarkly.com/home/flags/individual-targeting)
+* [Attribute targeting rules](https://docs.launchdarkly.com/home/flags/targeting-rules)
+  * To omit clauses that reference segments, which are not shared between environments, use the `--omit-segments` flag
+* [Default rule](https://docs.launchdarkly.com/home/flags/variations#changing-default-flag-values)
+* Whether or not the flag is [archived](https://docs.launchdarkly.com/home/code/flag-archive)
 
 ## Quick setup
 
@@ -36,13 +33,15 @@ The following properties will be synchronized:
      --destination-env DEST_ENVIRONMENT_KEY
    ```
 
-   **Note:** The environment key can be found in Account Settings within the LaunchDarkly application immediately under the name of the desired environment.
-   
+   You can find your environment keys in [**Account settings**](https://app.launchdarkly.com/settings) within the LaunchDarkly application. Click the **Projects** tab and select your project, then review the list of environments and keys for that project.
+
+   You can create an API access token from the [**Account settings**](https://app.launchdarkly.com/settings) page, on the **Authorization** tab.
+
    Optionally pass a host override:
 
    ```
    ./sync-ld-flags --api-token API_TOKEN \
-     -H https://your-launch-darkly-deploy.com
+     -H https://your-launchdarkly-deploy.com
      -p PROJECT_KEY \
      -s SOURCE_ENVIRONMENT_KEY \
      -d DEST_ENVIRONMENT_KEY
@@ -65,8 +64,8 @@ Options:
   -s, --source-env <key>       Source environment key
   -d, --destination-env <key>  Destination environment key
   -t, --api-token <token>      LaunchDarkly personal access token with
-                               write-level access.
-  -f, --flag <flag>            Sync only the specified flag
+                               write-level access
+  -f, --flag <flag>            Sync only the flag with the specified flag key
   -T, --tag <tags...>          Sync flags with the given tag(s). Only flags
                                with all tags will sync.
   -o, --omit-segments          Omit segments when syncing (default: false)
@@ -75,7 +74,7 @@ Options:
   -v, --verbose                Enable verbose logging (default: false)
   --dry-run                    Preview changes (default: false)
   -D, --debug                  Enable HTTP debugging (default: false)
-  -h, --help                   display help for command
+  -h, --help                   Display help for command
 ```
 
 ## Other
@@ -105,7 +104,7 @@ You can autocomplete keys and servers by using a config file. Add the following 
 {
     "staging": {
         "apitoken": "api-foobarfoobarfoobarfoobar",
-        "server": "https://your-launch-darkly-deploy.com"
+        "server": "https://your-launchdarkly-deploy.com"
     }
 }
 ```
