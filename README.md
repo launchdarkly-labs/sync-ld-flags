@@ -8,7 +8,7 @@ This Node script simplifies the task of synchronizing flag rollout rules between
 
 The following properties of each flag are synchronized:
 
-* Whether the flag is toggled **On** or **Off**, that is, whether the evaluation rules are enabled
+* Whether the flag is toggled **On**, enabling targeting rules, or **Off**
 * [Prerequisites](https://docs.launchdarkly.com/home/flags/prerequisites)
 * [Individual user targeting rules](https://docs.launchdarkly.com/home/flags/individual-targeting)
 * [Attribute targeting rules](https://docs.launchdarkly.com/home/flags/targeting-rules)
